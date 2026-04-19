@@ -1,22 +1,24 @@
 import asyncio
-from websocket.binance_websocket import WebsocketHandler
-from handlers import MiniTickerStreamHandler
+from websocket.binance_websocket import StreamType, WebsocketHandler
+
+
+async def process(out_queue: asyncio.Queue):
+    while True:
+        event = await out_queue.get()
+        print(event)
+        out_queue.task_done()
 
 
 async def main():
-    manager = WebsocketHandler()
-    handler = MiniTickerStreamHandler()
-    mini_ticker_id = await manager.create_mini_ticker_socket(callback=handler.process)
-    while True:
-        symbol = "BTCUSDT"
-        ticker = handler.get_ticker(symbol)  # Use the new method
-        agg_ticker = handler.get_aggregate_tickers()
-        if agg_ticker:
-            print(agg_ticker)
-        else:
-            print(f"Ticker for {symbol} not yet received.")
-
-        await asyncio.sleep(1)
+    out_queue = asyncio.Queue()
+    ws_handler = WebsocketHandler("binanceusdm", out_queue=out_queue)
+    pair = "BTC/USDT:USDT"
+    stream_type = StreamType.TICKER
+    ticker_stream = await ws_handler.subscribe(pair, stream_type)
+    asyncio.create_task(process(out_queue))
+    await asyncio.sleep(10)
+    await ws_handler.unsubscribe(ticker_stream)
+    await ws_handler.close()
 
 
 if __name__ == "__main__":

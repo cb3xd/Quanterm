@@ -1,37 +1,21 @@
 import asyncio
-from typing import Any
-from quanterm.data.events import StreamType, OrderbookSchema, TradesSchema
+from quanterm.data.events import StreamType
 from quanterm.websocket_handlers.websocket_handler import WebsocketHandler
-
-
-class DataNormalizer:
-    def __init__(self) -> None:
-        self.orderbook_stream_queue = asyncio.Queue()
-        self.trades_stream_queue = asyncio.Queue()
-
-    async def process_orderbook(self):
-        while True:
-            orderbook = await self.orderbook_stream_queue.get()
-            try:
-                orderbook_validated = OrderbookSchema(**orderbook)
-                print(
-                    f"Validated Orderbook: {orderbook_validated.bids[0]}:{orderbook_validated.asks[0]}"
-                )
-                # publish (orderbook_validated)
-            except Exception as e:
-                print(f"Validation failed: {e}")
-
+from quanterm.data.data_normalizer import DataNormalizer
 
 async def main():
     normalizer = DataNormalizer()
-    out_queue = normalizer.orderbook_stream_queue
-    ws_handler = WebsocketHandler("binanceusdm", out_queue=out_queue)
+    ob_outqueue = normalizer.orderbook_stream_queue
+    trades_outqueue = normalizer.trades_stream_queue
+    ws_handler = WebsocketHandler(exchange_id="binanceusdm")
     pair = "BTC/USDT:USDT"
-    stream_type = StreamType.ORDERBOOK
-    ticker_stream = await ws_handler.subscribe(pair, stream_type)
-    asyncio.create_task(normalizer.process_orderbook())
-    await asyncio.sleep(2)
-    await ws_handler.unsubscribe(ticker_stream)
+    orderbook_stream= await ws_handler.subscribe(pair, stream_type=StreamType.ORDERBOOK, out_queue=ob_outqueue)
+    trades_stream = await ws_handler.subscribe(pair, stream_type=StreamType.TRADES, out_queue=trades_outqueue)
+    asyncio.create_task(coro=normalizer.process_orderbook())
+    asyncio.create_task(coro=normalizer.process_trades())
+    await asyncio.sleep(1200)
+    await ws_handler.unsubscribe(stream_id=orderbook_stream)
+    await ws_handler.unsubscribe(stream_id=trades_stream)
     await ws_handler.close()
 
 

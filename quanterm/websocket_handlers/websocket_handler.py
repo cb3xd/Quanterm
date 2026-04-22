@@ -1,19 +1,13 @@
-from enum import StrEnum
+from quanterm.data.events import StreamType
+from pydantic import BaseModel
 import ccxt.pro as ccxtpro
 import asyncio
-
-
-class StreamType(StrEnum):
-    ORDERBOOK = "watchOrderBook"
-    TICKER = "watchTicker"
-    OHLCV = "watchOHLCV"
-    TRADES = "watchTrades"
 
 
 class WebsocketHandler:
     def __init__(self, exchange_id: str, out_queue: asyncio.Queue) -> None:
         self.exchange = getattr(ccxtpro, exchange_id)()
-        self.out_queue = out_queue
+        self.out_queue: asyncio.Queue[Any] = out_queue
         self._active_streams: dict[str, asyncio.Task] = {}
 
     async def subscribe(self, pair: str, stream_type: StreamType):

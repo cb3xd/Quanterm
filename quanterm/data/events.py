@@ -1,6 +1,10 @@
 from enum import StrEnum
 from pydantic import BaseModel, Field
+from typing import Dict, Any, List, TypeAlias
 
+RawOrderbook: TypeAlias = Dict[str, Any]
+RawTrade: TypeAlias = Dict[str, Any]
+RawTradeList: TypeAlias = List[RawTrade]
 
 class StreamType(StrEnum):
     ORDERBOOK = "watchOrderBook"

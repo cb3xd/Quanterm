@@ -1,16 +1,17 @@
 import asyncio
-from quanterm.data.events import OrderbookSchema, TradesSchema
+from typing import Never
+from quanterm.data.events import OrderbookSchema, TradesSchema, RawOrderbook, RawTradeList
 
 class DataNormalizer:
     def __init__(self) -> None:
-        self.orderbook_stream_queue = asyncio.Queue()
-        self.trades_stream_queue = asyncio.Queue()
+        self.orderbook_stream_queue: asyncio.Queue[RawOrderbook] = asyncio.Queue()
+        self.trades_stream_queue : asyncio.Queue[RawTradeList]= asyncio.Queue()
 
-    async def process_orderbook(self):
+    async def process_orderbook(self) -> Never:
         while True:
-            orderbook = await self.orderbook_stream_queue.get()
+            orderbook : RawOrderbook= await self.orderbook_stream_queue.get()
             try:
-                orderbook_validated = OrderbookSchema(**orderbook)
+                orderbook_validated: OrderbookSchema = OrderbookSchema(**orderbook)
                 print(
                     f"Validated Orderbook: {orderbook_validated.bids[0]}:{orderbook_validated.asks[0]}"
                 )
@@ -18,12 +19,12 @@ class DataNormalizer:
             except Exception as e:
                 print(f"Validation failed: {e}")
     
-    async def process_trades(self):
+    async def process_trades(self)-> Never:
         while True:
-            trades = await self.trades_stream_queue.get()
+            trades : RawTradeList= await self.trades_stream_queue.get()
             try:
                 for trade in trades:
-                    trade_validated = TradesSchema(**trade['info'])
+                    trade_validated: TradesSchema = TradesSchema(**trade['info'])
                     print(
                         f"[{trade_validated.order_type}] {trade_validated.symbol} {trade_validated.quantity}@{trade_validated.price}"
                     )

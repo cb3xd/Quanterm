@@ -1,33 +1,47 @@
 import asyncio
-from typing import Never
-from quanterm.data.events import OrderbookSchema, TradesSchema, RawOrderbook, RawTradeList
+from typing import List, Never
+
+from pydantic import TypeAdapter, ValidationError
+from quanterm.data.event_bus import EventBus
+from quanterm.data.events import (
+    OrderbookSchema,
+    StreamType,
+    TradeSchema,
+    TradeWrapper,
+    RawOrderbook,
+    RawTradeList,
+)
+
 
 class DataNormalizer:
-    def __init__(self) -> None:
+    def __init__(self, event_bus: EventBus) -> None:
         self.orderbook_stream_queue: asyncio.Queue[RawOrderbook] = asyncio.Queue()
-        self.trades_stream_queue : asyncio.Queue[RawTradeList]= asyncio.Queue()
+        self.trades_stream_queue: asyncio.Queue[RawTradeList] = asyncio.Queue()
+        self._bus = event_bus
 
     async def process_orderbook(self) -> Never:
         while True:
-            orderbook : RawOrderbook= await self.orderbook_stream_queue.get()
+            orderbook: RawOrderbook = await self.orderbook_stream_queue.get()
             try:
                 orderbook_validated: OrderbookSchema = OrderbookSchema(**orderbook)
-                print(
-                    f"Validated Orderbook: {orderbook_validated.bids[0]}:{orderbook_validated.asks[0]}"
+                await self._bus.publish(
+                    f"{orderbook_validated.symbol}@{StreamType.ORDERBOOK}",
+                    orderbook_validated,
                 )
-                # publish (orderbook_validated)
             except Exception as e:
                 print(f"Validation failed: {e}")
-    
-    async def process_trades(self)-> Never:
-        while True:
-            trades : RawTradeList= await self.trades_stream_queue.get()
-            try:
-                for trade in trades:
-                    trade_validated: TradesSchema = TradesSchema(**trade['info'])
-                    print(
-                        f"[{trade_validated.order_type}] {trade_validated.symbol} {trade_validated.quantity}@{trade_validated.price}"
-                    )
-            except Exception as e:
-                print(f"")
 
+    async def process_trades(self) -> Never:
+        trades_adapter = TypeAdapter(List[TradeWrapper])
+
+        while True:
+            trades: RawTradeList = await self.trades_stream_queue.get()
+            try:
+                validated_batch = trades_adapter.validate_python(trades)
+                for wrapper in validated_batch:
+                    trade: TradeSchema = wrapper.info
+                    await self._bus.publish(
+                        f"{trade.symbol}@{StreamType.TRADES}", trade
+                    )
+            except ValidationError as e:
+                print(f"{e}")

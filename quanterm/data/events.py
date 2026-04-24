@@ -6,12 +6,22 @@ RawOrderbook: TypeAlias = Dict[str, Any]
 RawTrade: TypeAlias = Dict[str, Any]
 RawTradeList: TypeAlias = List[RawTrade]
 
+
 class StreamType(StrEnum):
     ORDERBOOK = "watchOrderBook"
     TRADES = "watchTrades"
 
 
-class TradesSchema(BaseModel):
+class TradeWrapper(BaseModel):
+    info: TradeSchema
+
+
+class TradesBatch(BaseModel):
+    trades: List[TradeSchema]
+    symbol: str
+
+
+class TradeSchema(BaseModel):
     event_type: str = Field(alias="e")
     event_time: int = Field(alias="E")
     transaction_time: int = Field(alias="T")

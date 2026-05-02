@@ -1,91 +1,55 @@
-# Byte-compiled / optimized / DLL files
+# Byte-compiled / optimized
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# Virtual environments
+# Environments
+.env
+.env.*
+!.env.example
 venv/
 .venv/
 env/
 ENV/
 
-# Environment variables
-.env
-.env.*
+# Dependencies
+node_modules/
+.bun-cache/
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+target/
+.vite/
+*.egg-info/
+.eggs/
 
 # Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
 
-# Unit test / coverage reports
+# Testing/Coverage
 htmlcov/
 .tox/
-.nox/
 .coverage
 .coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
 .pytest_cache/
-
-# Type checker
 .mypy_cache/
-.pyre/
+.ruff_cache/
 
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IDEs / Editors
+# IDEs & OS
 .vscode/
+!.vscode/extensions.json
 .idea/
 *.swp
-*.swo
-
-# OS files
 .DS_Store
 Thumbs.db
 
-# PyInstaller
-*.manifest
-*.spec
-
-# Documentation builds
-docs/_build/
-
-# PyBuilder
-target/
-
-# Ruff / linting
-.ruff_cache/
-
-# Pipenv / Poetry
-Pipfile.lock
-poetry.lock
-
-# Spyder / Rope
-.spyderproject
-.spyproject
-.ropeproject
+# Lockfiles (Optional: remove if tracking is desired)
+# bun.lockb
+# poetry.lock
+# Pipfile.lock

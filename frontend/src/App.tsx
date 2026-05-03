@@ -1,21 +1,44 @@
 import { Button } from "./components/ui/button";
 import { Separator } from "./components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "./components/ui/tabs";
+import { useState } from "react";
+import { RiCloseLine, RiAddLine } from "@remixicon/react";
 
 function App() {
+  const [tabs, setTabs] = useState([]);
+  const addTab = () => {
+    const id = crypto.randomUUID();
+    const newTab = {
+      id,
+      tabName: `New Tab`,
+    };
+    setTabs((prev) => [...prev, newTab]);
+  };
+  const removeTab = (id) => {
+    setTabs((prev) => prev.filter((tab) => tab.id !== id));
+  };
   return (
     <>
       <div className="flex">
         <Tabs defaultValue="tab1">
           <TabsList>
-            <TabsTrigger value="tab1">New Tab 1</TabsTrigger>
-            <TabsTrigger value="tab2">New Tab 2</TabsTrigger>
-            <TabsTrigger value="tab3">New Tab 3</TabsTrigger>
-            <TabsTrigger value="tab4">New Tab 4</TabsTrigger>
-            <TabsTrigger value="tab5">New Tab 5</TabsTrigger>
+            {tabs.map((tab) => (
+              <div className="flex items-center">
+                <TabsTrigger value={tab.id}>{tab.tabName}</TabsTrigger>
+                <Button
+                  variant="ghost"
+                  className="w-6 h-6 p-1"
+                  onClick={() => removeTab(tab.id)}
+                >
+                  <RiCloseLine className="size-3" />
+                </Button>
+              </div>
+            ))}
           </TabsList>
         </Tabs>
-        <Button variant="ghost">+</Button>
+        <Button variant="ghost" onClick={addTab}>
+          <RiAddLine className="size-3" />
+        </Button>
       </div>
       <Separator />
     </>

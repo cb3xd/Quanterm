@@ -1,7 +1,7 @@
 import asyncio
 from quanterm.data.event_bus import EventBus
 from quanterm.data.events import StreamType
-from quanterm.websocket_handlers.websocket_handler import WebsocketHandler
+from quanterm.websocket_handlers.base import WebsocketHandler
 from quanterm.data.data_normalizer import DataNormalizer
 from typing import Any
 

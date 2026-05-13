@@ -2,6 +2,7 @@ import asyncio
 import msgspec
 import websockets
 import json
+from quanterm.exchange.base import TradePacket
 from quanterm.exchange.binanceusdm.schemas import Packet
 from quanterm.exchange.binanceusdm.streams import BinanceStreamDefinitions
 from quanterm.websocket.base import BaseWS
@@ -62,8 +63,12 @@ class BinanceWebsocket(BaseWS):
     async def _on_message(self, raw: str):
         if "stream" not in raw:
             return
-        stream_type = raw.split('"stream":"')[1].split("@")[1].split('"')[0]
+
         packet = self.msg_decoder.decode(raw.encode())
-        definition = self.streams[stream_type]
-        data = msgspec.convert(packet.data, definition.schema)
+
+        stream_type = packet.stream.split("@")[1]
+        print(stream_type)
+        stream = self.streams[stream_type]
+
+        data: TradePacket = stream.mapper(msgspec.convert(packet.data, stream.schema))
         print(data)

@@ -8,9 +8,14 @@ async def main():
     binanceusdm = BinanceUSDM()
     ws = await binanceusdm.ws_instance()
     await ws.connect()
-    symbol = binanceusdm.get_stream_id("btcusdt", MarketStreams.TRADES)
-    await ws.subscribe(symbol)
-    await asyncio.sleep(3)
+
+    symbols = await binanceusdm.get_symbols()
+    for symbol in symbols:
+        stream_id = binanceusdm.get_stream_id(symbol, MarketStreams.TRADES)
+        await ws.subscribe(stream_id)
+        await asyncio.sleep(0.15)
+
+    await asyncio.sleep(100)
     await ws.disconnect()
     print("DONE")
 

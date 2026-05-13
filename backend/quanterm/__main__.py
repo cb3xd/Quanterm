@@ -1,30 +1,44 @@
+from msgspec import Struct
+from quanterm.bus.base import EventBus
+from quanterm.exchange.binanceusdm.client import BinanceUSDM
+from quanterm.exchange.binanceusdm.streams import MarketStreams
 import asyncio
-from quanterm.data.event_bus import EventBus
-from quanterm.data.events import StreamType
-from quanterm.websocket_handlers.base import WebsocketHandler
-from quanterm.data.data_normalizer import DataNormalizer
-from typing import Any
 
 
-async def store_to_df(data: Any):
-    print(data)
+async def foo(data: Struct) -> None:
+    print("Received by function 1!")
+
+
+async def foo2(data: Struct) -> None:
+    print("Received by function 2!")
+
+
+async def foo3(data: Struct) -> None:
+    print("Received by function 3!")
 
 
 async def main():
-    bus = EventBus()
-    normalizer = DataNormalizer(event_bus=bus)
-    ob_outqueue = normalizer.orderbook_stream_queue
-    ws_handler = WebsocketHandler(exchange_id="binanceusdm")
-    pair = "BTCUSDT"
-    bus.on(f"{pair}@{StreamType.ORDERBOOK}", store_to_df)
-    ob_stream = await ws_handler.subscribe(
-        pair, stream_type=StreamType.ORDERBOOK, out_queue=ob_outqueue
-    )
-    asyncio.create_task(coro=normalizer.process_trades())
-    try:
-        await asyncio.sleep(1200)
-    finally:
-        await ws_handler.close()
+    binanceusdm = BinanceUSDM()
+    event_bus = EventBus()
+    ws = await binanceusdm.ws_instance(event_bus)
+
+    await ws.connect()
+
+    symbols = ["btcusdt", "ethusdt", "solusdt"]
+    for symbol in symbols:
+        stream_id = binanceusdm.get_stream_id(symbol, MarketStreams.TRADES)
+        await ws.subscribe(stream_id)
+        await asyncio.sleep(0.15)
+
+    symbol = binanceusdm.get_stream_id("btcusdt", MarketStreams.TRADES)
+    print(symbol)
+    event_bus.on(symbol, foo)
+    event_bus.on(symbol, foo2)
+    event_bus.on(symbol, foo3)
+    await asyncio.sleep(100)
+
+    await ws.disconnect()
+    print("DONE")
 
 
 if __name__ == "__main__":

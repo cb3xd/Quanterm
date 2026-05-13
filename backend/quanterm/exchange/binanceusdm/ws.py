@@ -9,8 +9,8 @@ from quanterm.websocket.base import BaseWS
 
 
 class BinanceWebsocket(BaseWS):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, event_bus) -> None:
+        super().__init__(event_bus)
         self.uri = "wss://fstream.binance.com/market/stream"
         self.streams = BinanceStreamDefinitions.streams
         self.msg_decoder = msgspec.json.Decoder(Packet)
@@ -67,8 +67,8 @@ class BinanceWebsocket(BaseWS):
         packet = self.msg_decoder.decode(raw.encode())
 
         stream_type = packet.stream.split("@")[1]
-        print(stream_type)
         stream = self.streams[stream_type]
 
         data: TradePacket = stream.mapper(msgspec.convert(packet.data, stream.schema))
-        print(data)
+
+        await self.event_bus.publish(packet.stream, data)

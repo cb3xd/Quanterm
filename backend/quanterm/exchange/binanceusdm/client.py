@@ -1,4 +1,5 @@
 from typing import override
+from quanterm.bus.base import EventBus
 from quanterm.exchange.base import Exchange
 import quanterm.exchange.binanceusdm.api as api
 from quanterm.exchange.binanceusdm.ws import BinanceWebsocket
@@ -15,6 +16,6 @@ class BinanceUSDM(Exchange):
         return f"{symbol.lower()}@{stream_type}"
 
     @override
-    async def ws_instance(self) -> BinanceWebsocket:
-        self.websocket = BinanceWebsocket()
+    async def ws_instance(self, event_bus: EventBus) -> BinanceWebsocket:
+        self.websocket = BinanceWebsocket(event_bus)
         return self.websocket

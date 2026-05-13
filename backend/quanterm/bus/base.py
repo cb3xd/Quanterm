@@ -1,21 +1,9 @@
 import asyncio
-import uuid
-from pydantic import BaseModel
 from typing import Optional, TypeAlias, Callable, Any, Coroutine
 from collections import defaultdict
-
+from msgspec import Struct
 
 EventHandler: TypeAlias = Callable[[Any], Coroutine[Any, Any, None]]
-
-
-class Message[T](BaseModel):
-    id: str = str(uuid.uuid4())
-    body: Optional[T] = None
-    reply_address: Optional[str] = None
-
-    @classmethod
-    def create(cls, body: Optional[T] = None) -> "Message[T]":
-        return cls(body=body)
 
 
 class Listener:
@@ -46,12 +34,11 @@ class EventBus:
         else:
             return decorator(handler)
 
-    async def publish[T: BaseModel](self, event: str, message: BaseModel) -> None:
+    async def publish(self, event: str, message: Struct) -> None:
         listeners = self._listeners.get(event, [])
         if listeners:
             async with asyncio.TaskGroup() as tg:
                 for listener in listeners:
-                    print(f"Sent to {listener}")
                     tg.create_task(listener(message))
 
     def remove_listener(self, event: str, handler: EventHandler) -> None:

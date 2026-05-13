@@ -5,19 +5,18 @@ import msgspec
 
 
 class TradePacket(msgspec.Struct):
-    exchange_id: int
-    symbol_id: int
-    price: float
-    size: float
-    ts: int
+    exchange_id: str
+    symbol: str
+    price: str
+    size: str
+    normal_size: str
+    timestamp: int
+    maker: bool
 
 
 class StreamDefinition:
-    def __init__(
-        self, stream_id: str, schema: Type[msgspec.Struct], mapper: Callable
-    ) -> None:
-        self.stream_id = stream_id
-        self.decoder = msgspec.json.Decoder(schema)
+    def __init__(self, schema: Type[msgspec.Struct], mapper: Callable) -> None:
+        self.schema = schema
         self.mapper = mapper
 
 

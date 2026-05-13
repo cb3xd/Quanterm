@@ -1,6 +1,9 @@
 import asyncio
+import msgspec
 import websockets
 import json
+from quanterm.exchange.binanceusdm.schemas import Packet
+from quanterm.exchange.binanceusdm.streams import BinanceStreamDefinitions
 from quanterm.websocket.base import BaseWS
 
 
@@ -8,6 +11,8 @@ class BinanceWebsocket(BaseWS):
     def __init__(self) -> None:
         super().__init__()
         self.uri = "wss://fstream.binance.com/market/stream"
+        self.streams = BinanceStreamDefinitions.streams
+        self.msg_decoder = msgspec.json.Decoder(Packet)
 
     async def connect(self) -> None:
         self.websocket = await websockets.connect(self.uri)
@@ -54,5 +59,11 @@ class BinanceWebsocket(BaseWS):
         else:
             print(f"Stream {stream_id} does not exist!")
 
-    async def _on_message(self, raw):
-        print(f"Processing: {raw}")
+    async def _on_message(self, raw: str):
+        if "stream" not in raw:
+            return
+        stream_type = raw.split('"stream":"')[1].split("@")[1].split('"')[0]
+        packet = self.msg_decoder.decode(raw.encode())
+        definition = self.streams[stream_type]
+        data = msgspec.convert(packet.data, definition.schema)
+        print(data)

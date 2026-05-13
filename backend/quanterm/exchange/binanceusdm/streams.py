@@ -1,4 +1,6 @@
 from enum import StrEnum
+from quanterm.exchange.base import StreamDefinition
+from quanterm.exchange.binanceusdm.schemas import BinanceTrade, map_trade
 
 
 class MarketStreams(StrEnum):
@@ -11,3 +13,12 @@ class MarketStreams(StrEnum):
     TICKER_ALL = "!ticker@arr"
     LIQUIDATIONS = "forceOrder"
     LIQUIDATIONS_ALL = "!forceOrder@arr"
+
+
+class BinanceStreamDefinitions:
+    streams = {
+        "aggTrade": StreamDefinition(
+            schema=BinanceTrade,
+            mapper=map_trade,
+        )
+    }

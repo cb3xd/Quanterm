@@ -2,7 +2,7 @@ import asyncio
 import msgspec
 import websockets
 import json
-from quanterm.exchange.base import TradePacket
+from quanterm.schemas import TradePacket
 from quanterm.exchange.binanceusdm.schemas import Packet
 from quanterm.exchange.binanceusdm.streams import BinanceStreamDefinitions
 from quanterm.websocket.base import BaseWS

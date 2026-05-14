@@ -1,18 +1,18 @@
 from msgspec import Struct
 from quanterm.bus.base import EventBus
 from quanterm.bus.utils import generate_event_id
-from quanterm.exchange.base import ExchangeID, StreamTypes
+from quanterm.types import ExchangeID, StreamTypes
 from quanterm.exchange.binanceusdm.client import BinanceUSDM
 from quanterm.exchange.binanceusdm.streams import MarketStreams
 import asyncio
 
 
 async def foo(data: Struct) -> None:
-    print("Received by function 1!")
+    pass
 
 
 async def foo2(data: Struct) -> None:
-    print("Received by function 2!")
+    print(data)
 
 
 async def foo3(data: Struct) -> None:
@@ -26,19 +26,16 @@ async def main():
 
     await ws.connect()
 
-    symbols = ["btcusdt", "ethusdt", "solusdt"]
-    for symbol in symbols:
-        stream_id = binanceusdm.get_stream_id(symbol, MarketStreams.TRADES)
-        await ws.subscribe(stream_id)
-        await asyncio.sleep(0.15)
-
-    symbol = binanceusdm.get_stream_id("btcusdt", MarketStreams.TRADES)
+    print("Subscribing to KLINE")
+    symbol = binanceusdm.get_stream_id("btcusdt", MarketStreams.KLINE_1M)
+    await ws.subscribe(symbol)
 
     event_id = generate_event_id(
-        ExchangeID.binanceusdm, "btcusdt", StreamTypes.trade_stream
+        ExchangeID.binanceusdm, "btcusdt", StreamTypes.kline_stream, "1m"
     )
-    event_bus.on(event_id, foo)
-    await asyncio.sleep(10)
+    print(f"listening to {event_id}")
+    event_bus.on(event_id, foo2)
+    await asyncio.sleep(20)
 
     await ws.disconnect()
     print("DONE")

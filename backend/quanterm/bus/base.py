@@ -8,7 +8,7 @@ EventHandler: TypeAlias = Callable[[Any], Coroutine[Any, Any, None]]
 
 class Listener:
     def __init__(
-        self, event_bus: "EventBus", event: int, handler: EventHandler
+        self, event_bus: "EventBus", event: str, handler: EventHandler
     ) -> None:
         self.event_bus = event_bus
         self.event = event
@@ -20,10 +20,10 @@ class Listener:
 
 class EventBus:
     def __init__(self) -> None:
-        self._listeners: defaultdict[int, list[EventHandler]] = defaultdict(list)
+        self._listeners: defaultdict[str, list[EventHandler]] = defaultdict(list)
 
     def on(
-        self, event: int, handler: Optional[EventHandler] = None
+        self, event: str, handler: Optional[EventHandler] = None
     ) -> Callable[[EventHandler], Listener] | Listener:
         def decorator(handler_function: EventHandler) -> Listener:
             self._listeners[event].append(handler_function)
@@ -34,18 +34,18 @@ class EventBus:
         else:
             return decorator(handler)
 
-    async def publish(self, event: int, message: Struct) -> None:
+    async def publish(self, event: str, message: Struct) -> None:
         listeners = self._listeners.get(event, [])
         if listeners:
             async with asyncio.TaskGroup() as tg:
                 for listener in listeners:
                     tg.create_task(listener(message))
 
-    def remove_listener(self, event: int, handler: EventHandler) -> None:
+    def remove_listener(self, event: str, handler: EventHandler) -> None:
         if event in self._listeners:
             self._listeners[event].remove(handler)
             if not self._listeners[event]:
                 del self._listeners[event]
 
-    def get_listeners(self, event: int) -> list[EventHandler]:
+    def get_listeners(self, event: str) -> list[EventHandler]:
         return self._listeners[event].copy()

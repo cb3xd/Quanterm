@@ -1,7 +1,6 @@
 import asyncio
 from abc import ABC, abstractmethod
 from websockets import ClientConnection, ConnectionClosed, Data
-
 from quanterm.bus.base import EventBus
 
 

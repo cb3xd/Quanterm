@@ -1,11 +1,12 @@
-from quanterm.exchange.base import ExchangeID, StreamTypes
+from quanterm.types import ExchangeID, StreamTypes
 
 
 def generate_event_id(
-    exchange_id: ExchangeID, symbol: str, event_type: StreamTypes
-) -> int:
+    exchange_id: ExchangeID, symbol: str, event_type: StreamTypes, extra: str | None
+) -> str:
 
-    symbol_hash = hash(symbol) & 0xFFFFFF
-    event_id = (exchange_id << 32) | (event_type << 24) | symbol_hash
-    print(event_id)
+    event_id = f"{exchange_id}.{symbol}.{event_type}".lower()
+
+    if extra:
+        event_id += f".{extra}"
     return event_id

@@ -1,10 +1,10 @@
-import msgspec
-
 from quanterm.bus.utils import generate_event_id
-from quanterm.exchange.base import ExchangeID, StreamTypes, TradePacket
+from quanterm.types import StreamTypes, ExchangeID
+from quanterm.schemas import TradePacket, KlinePacket
+from msgspec import Struct
 
 
-class BinanceTrade(msgspec.Struct):
+class BinanceTrade(Struct):
     # {
     #   "e": "aggTrade",  // Event type
     #   "E": 123456789,   // Event time
@@ -32,7 +32,39 @@ class BinanceTrade(msgspec.Struct):
     m: bool
 
 
-class Packet(msgspec.Struct):
+class BinanceKline(Struct):
+    # {
+    #   "e": "kline",     // Event type
+    #   "E": 1638747660000,   // Event time
+    #   "s": "BTCUSDT",    // Symbol
+    #   "k": {
+    #     "t": 1638747660000, // Kline start time
+    #     "T": 1638747719999, // Kline close time
+    #     "s": "BTCUSDT",  // Symbol
+    #     "i": "1m",      // Interval
+    #     "f": 100,       // First trade ID
+    #     "L": 200,       // Last trade ID
+    #     "o": "0.0010",  // Open price
+    #     "c": "0.0020",  // Close price
+    #     "h": "0.0025",  // High price
+    #     "l": "0.0015",  // Low price
+    #     "v": "1000",    // Base asset volume
+    #     "n": 100,       // Number of trades
+    #     "x": false,     // Is this kline closed?
+    #     "q": "1.0000",  // Quote asset volume
+    #     "V": "500",     // Taker buy base asset volume
+    #     "Q": "0.500",   // Taker buy quote asset volume
+    #     "B": "123456"   // Ignore
+    #   }
+    # }
+
+    e: str
+    E: int
+    s: str
+    k: dict  # We'll parse the inner dict separately in the mapper
+
+
+class Packet(Struct):
     stream: str
     data: dict
 
@@ -47,6 +79,31 @@ def map_trade(trade: BinanceTrade) -> TradePacket:
         timestamp=trade.T,
         maker=trade.m,
         event_id=generate_event_id(
-            ExchangeID.binanceusdm, trade.s, StreamTypes.trade_stream
+            ExchangeID.binanceusdm, trade.s, StreamTypes.trade_stream, None
+        ),
+    )
+
+
+def map_kline(kl: BinanceKline) -> KlinePacket:
+    kline_data = kl.k
+    return KlinePacket(
+        exchange_id=ExchangeID.binanceusdm,
+        symbol=kl.s,
+        interval=kline_data["i"],
+        open_price=kline_data["o"],
+        close_price=kline_data["c"],
+        high_price=kline_data["h"],
+        low_price=kline_data["l"],
+        volume=kline_data["v"],
+        trades=kline_data["n"],
+        is_closed=kline_data["x"],
+        quote_volume=kline_data["q"],
+        taker_buy_base_volume=kline_data["V"],
+        taker_buy_quote_volume=kline_data["Q"],
+        event_id=generate_event_id(
+            ExchangeID.binanceusdm,
+            kl.s,
+            StreamTypes.kline_stream,
+            extra=kline_data["i"],
         ),
     )

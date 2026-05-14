@@ -54,7 +54,7 @@ class BinanceWebsocket(BaseWS):
             return
 
         if stream_id in self.active_streams:
-            unsub_message = {"method": "UNSUBSCRIBE", "params": [stream_id]}
+            unsub_message = {"method": "UNSUBSCRIBE", "params": [stream_id], "id": 2}
             self.active_streams.remove(stream_id)
             await self.websocket.send(json.dumps(unsub_message))
         else:

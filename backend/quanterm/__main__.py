@@ -36,7 +36,8 @@ async def main():
     print(f"listening to {event_id}")
     event_bus.on(event_id, foo2)
     await asyncio.sleep(20)
-
+    await ws.unsubscribe(symbol)
+    await asyncio.sleep(20)
     await ws.disconnect()
     print("DONE")
 

@@ -48,18 +48,6 @@ class BinanceWebsocket(BaseWS):
 
         await self.websocket.send(json.dumps(subscribe_message))
 
-    async def unsubscribe(self, stream_id: str):
-        if self.websocket is None:
-            print("Connect first.")
-            return
-
-        if stream_id in self.active_streams:
-            unsub_message = {"method": "UNSUBSCRIBE", "params": [stream_id], "id": 2}
-            self.active_streams.remove(stream_id)
-            await self.websocket.send(json.dumps(unsub_message))
-        else:
-            print(f"Stream {stream_id} does not exist!")
-
     async def _on_message(self, raw: str):
         if "stream" not in raw:
             return

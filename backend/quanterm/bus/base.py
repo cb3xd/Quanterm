@@ -49,3 +49,10 @@ class EventBus:
 
     def get_listeners(self, event: str) -> list[EventHandler]:
         return self._listeners[event].copy()
+
+
+_event_bus_instance = EventBus()
+
+
+def get_event_bus() -> EventBus:
+    return _event_bus_instance

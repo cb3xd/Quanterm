@@ -1,7 +1,7 @@
-from ctypes import Union
 import msgspec
 
-from quanterm.exchange.base import TradePacket
+from quanterm.bus.utils import generate_event_id
+from quanterm.exchange.base import ExchangeID, StreamTypes, TradePacket
 
 
 class BinanceTrade(msgspec.Struct):
@@ -39,11 +39,14 @@ class Packet(msgspec.Struct):
 
 def map_trade(trade: BinanceTrade) -> TradePacket:
     return TradePacket(
-        exchange_id="binance",
+        exchange_id=ExchangeID.binanceusdm,
         symbol=trade.s,
         price=trade.p,
         size=trade.q,
         normal_size=trade.nq,
         timestamp=trade.T,
         maker=trade.m,
+        event_id=generate_event_id(
+            ExchangeID.binanceusdm, trade.s, StreamTypes.trade_stream
+        ),
     )

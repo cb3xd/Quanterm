@@ -1,5 +1,7 @@
 from msgspec import Struct
 from quanterm.bus.base import EventBus
+from quanterm.bus.utils import generate_event_id
+from quanterm.exchange.base import ExchangeID, StreamTypes
 from quanterm.exchange.binanceusdm.client import BinanceUSDM
 from quanterm.exchange.binanceusdm.streams import MarketStreams
 import asyncio
@@ -31,11 +33,12 @@ async def main():
         await asyncio.sleep(0.15)
 
     symbol = binanceusdm.get_stream_id("btcusdt", MarketStreams.TRADES)
-    print(symbol)
-    event_bus.on(symbol, foo)
-    event_bus.on(symbol, foo2)
-    event_bus.on(symbol, foo3)
-    await asyncio.sleep(100)
+
+    event_id = generate_event_id(
+        ExchangeID.binanceusdm, "btcusdt", StreamTypes.trade_stream
+    )
+    event_bus.on(event_id, foo)
+    await asyncio.sleep(10)
 
     await ws.disconnect()
     print("DONE")

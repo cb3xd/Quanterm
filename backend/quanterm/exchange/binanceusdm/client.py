@@ -1,14 +1,14 @@
 from typing import override
 from quanterm.bus.base import EventBus
 from quanterm.exchange.base import Exchange
-import quanterm.exchange.binanceusdm.api as api
+import quanterm.exchange.binanceusdm.external_api as external_api
 from quanterm.exchange.binanceusdm.ws import BinanceWebsocket
 
 
 class BinanceUSDM(Exchange):
     @override
     async def get_symbols(self) -> set[str]:
-        symbols = await api.fetch_symbols()
+        symbols = await external_api.fetch_symbols()
         return symbols
 
     @override

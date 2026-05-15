@@ -28,6 +28,7 @@ class BaseWS(ABC):
         if self.websocket is None:
             print("Connect first")
             return
+
         while True:
             try:
                 async for msg in self.websocket:

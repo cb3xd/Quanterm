@@ -65,5 +65,4 @@ class BinanceWebsocket(BaseWS):
 
         data: TradePacket = stream.mapper(msgspec.convert(packet.data, stream.schema))
 
-        print(data)
         await self.event_bus.publish(data.event_id, data)

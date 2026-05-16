@@ -1,7 +1,6 @@
 from msgspec import Struct
 from quanterm.bus.base import EventBus
-from quanterm.bus.utils import generate_event_id
-from quanterm.types import ExchangeID, StreamTypes
+from quanterm.types import StreamTypes
 from quanterm.exchange.binanceusdm.client import BinanceUSDM
 from quanterm.exchange.binanceusdm.streams import MarketStreams
 import asyncio
@@ -26,18 +25,14 @@ async def main():
 
     await ws.connect()
 
-    print("Subscribing to KLINE")
-    symbol = binanceusdm.get_stream_id("btcusdt", MarketStreams.KLINE_1M)
-    await ws.subscribe(symbol)
+    symbols = await binanceusdm.get_symbols()
+    for symbol in symbols:
+        print(f"Subscribing to: {symbol}@aggTrade")
+        await ws.subscribe(f"{symbol}@aggTrade")
+        event_bus.on("binanceusdm.{symbol}.trade_stream", foo2)
+        await asyncio.sleep(0.15)
 
-    event_id = generate_event_id(
-        ExchangeID.binanceusdm, "btcusdt", StreamTypes.kline_stream, "1m"
-    )
-    print(f"listening to {event_id}")
-    event_bus.on(event_id, foo2)
-    await asyncio.sleep(20)
-    await ws.disconnect()
-    print("DONE")
+    await asyncio.Future()
 
 
 if __name__ == "__main__":

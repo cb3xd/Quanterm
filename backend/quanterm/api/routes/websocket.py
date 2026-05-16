@@ -1,14 +1,24 @@
 from fastapi import WebSocket, APIRouter
-from msgspec import DecodeError, json, convert
+
+from msgspec import DecodeError, Struct, json, convert
 from quanterm.api.types import FastApiMethods, Packet
 from quanterm.bus.base import get_event_bus
 from quanterm.schemas import FastApiSubscribePacket
+from quanterm.types import KlineIntervals, StreamTypes
 
 event_bus = get_event_bus()
 router = APIRouter()
 
 
+class Parameters(Struct):
+    symbol: str
+    stream_type: StreamTypes
+    event_id: str
+    interval: KlineIntervals
+
+
 packet_decoder = json.Decoder(Packet)
+encoder = json.Encoder()
 sub_decoder = json.Decoder(FastApiSubscribePacket)
 
 
@@ -18,14 +28,27 @@ def process_message(msg: Packet, exchange_id: str):
         param_dict["event_id"] = f"{exchange_id}.subscribe"
         if param_dict.get("interval") is None:
             param_dict["interval"] = None
-        params = convert(param_dict, FastApiSubscribePacket)
-        print(params)
+        params_encoded = encoder.encode(param_dict)
+        params = sub_decoder.decode(params_encoded)
         return params
+
+
+def generate_event_id(
+    exchange_id: str,
+    symbol: str,
+    stream_type: StreamTypes,
+    interval: KlineIntervals | None,
+):
+    event_id = f"{exchange_id}.{symbol}.{stream_type}"
+    if interval:
+        return event_id + f".{interval}"
+    return event_id
 
 
 @router.websocket("/ws/{exchange}/streams")
 async def ws_route(websocket: WebSocket, exchange: str):
     await websocket.accept()
+    listeners = {}
     while True:
         try:
             data = await websocket.receive_text()
@@ -34,8 +57,30 @@ async def ws_route(websocket: WebSocket, exchange: str):
             if params is None:
                 print("You did something wrong nigga")
             else:
+                event_id = generate_event_id(
+                    exchange,
+                    params.symbol,
+                    params.stream_type,
+                    params.interval,
+                )
+
+                async def send_to_client(data: Struct):
+                    try:
+                        encoded_json = json.encode(data)
+                        await websocket.send_bytes(encoded_json)
+                    except Exception as e:
+                        print(e)
+
+                listener = event_bus.on(event_id, send_to_client)
+                listeners[event_id] = listener
                 await event_bus.publish(params.event_id, params)
         except DecodeError as e:
             print("Invalid request.")
             print(e)
             continue
+        except Exception as e:
+            print(f"WS Error: {e}")
+            break
+
+    for listener in listeners.values():
+        listener.unregister()

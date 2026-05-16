@@ -13,7 +13,6 @@ class BinanceFapiWebsocketBridge:
 
     async def handle_sub_packet(self, packet: FastApiSubscribePacket):
         stream_id = get_stream_id(packet.symbol, packet.stream_type, packet.interval)
-        print(stream_id)
         if stream_id is None:
             return
         await self.ws.subscribe(stream_id)

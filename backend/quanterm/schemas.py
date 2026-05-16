@@ -36,7 +36,7 @@ class FastApiSubscribePacket(Struct, omit_defaults=True):
     event_id: str
     symbol: str
     stream_type: StreamTypes
-    interval: KlineIntervals
+    interval: KlineIntervals | None = None
 
 
 class StreamDefinition:

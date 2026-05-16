@@ -1,4 +1,5 @@
-from quanterm.types import ExchangeID, StreamTypes
+from quanterm.exchange.constants import ExchangeID
+from quanterm.types import StreamTypes
 
 
 def generate_event_id(

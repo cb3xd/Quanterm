@@ -12,10 +12,5 @@ class BinanceUSDM(Exchange):
         return symbols
 
     @override
-    def get_stream_id(self, symbol: str, stream_type: str) -> str:
-        return f"{symbol.lower()}@{stream_type}"
-
-    @override
     async def ws_instance(self, event_bus: EventBus) -> BinanceWebsocket:
-        self.websocket = BinanceWebsocket(event_bus)
-        return self.websocket
+        return BinanceWebsocket(event_bus)

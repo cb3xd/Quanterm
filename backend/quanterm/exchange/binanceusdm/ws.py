@@ -14,6 +14,7 @@ class BinanceWebsocket(BaseWS):
         self.uri = "wss://fstream.binance.com/market/stream"
         self.streams = BinanceStreamDefinitions.streams
         self.msg_decoder = msgspec.json.Decoder(Packet)
+        self.max_streams = 1024
 
     async def connect(self) -> None:
         self.websocket = await websockets.connect(self.uri)
@@ -36,9 +37,14 @@ class BinanceWebsocket(BaseWS):
         print("WS Disconnected")
 
     async def subscribe(self, stream_id: str):
+        if self.active_streams.__len__() == self.max_streams:
+            print("Max streams reached")
+            return
+
         if self.websocket is None:
             print("Connect first.")
             return
+
         if stream_id in self.active_streams:
             print(f"[{stream_id}] Stream already exists!")
             return
@@ -59,4 +65,5 @@ class BinanceWebsocket(BaseWS):
 
         data: TradePacket = stream.mapper(msgspec.convert(packet.data, stream.schema))
 
+        print(data)
         await self.event_bus.publish(data.event_id, data)

@@ -19,24 +19,7 @@ class MarketStreams(StrEnum):
     TICKER_ALL = "!ticker@arr"
     LIQUIDATIONS = "forceOrder"
     LIQUIDATIONS_ALL = "!forceOrder@arr"
-
-    KLINE_1M = "kline_1m"
-    KLINE_3M = "kline_3m"
-    KLINE_5M = "kline_5m"
-    KLINE_15M = "kline_15m"
-    KLINE_30M = "kline_30m"
-
-    KLINE_1H = "kline_1h"
-    KLINE_2H = "kline_2h"
-    KLINE_4H = "kline_4h"
-    KLINE_6H = "kline_6h"
-    KLINE_8H = "kline_8h"
-    KLINE_12H = "kline_12h"
-
-    KLINE_1D = "kline_1d"
-    KLINE_3D = "kline_3d"
-    KLINE_1W = "kline_1w"
-    KLINE_1M_MO = "kline_1M"  # Note: Capital 'M' denotes Month
+    KLINE = "kline_"
 
 
 class BinanceStreamDefinitions:

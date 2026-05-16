@@ -21,7 +21,3 @@ class KlineIntervals(StrEnum):
     day_3 = "3d"
     weekly = "1w"
     monthly = "1m"
-
-
-class ExchangeID(StrEnum):
-    binanceusdm = "busdm"

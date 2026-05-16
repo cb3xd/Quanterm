@@ -11,6 +11,7 @@ class BaseWS(ABC):
         self.websocket: ClientConnection | None = None
         self._watch_task: asyncio.Task[None] | None = None
         self.event_bus: EventBus = event_bus
+        self.max_streams: int
 
     @abstractmethod
     async def connect(self) -> None: ...

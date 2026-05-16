@@ -1,5 +1,6 @@
 from quanterm.bus.utils import generate_event_id
-from quanterm.types import StreamTypes, ExchangeID
+from quanterm.exchange.constants import ExchangeID
+from quanterm.types import StreamTypes
 from quanterm.schemas import TradePacket, KlinePacket
 from msgspec import Struct
 

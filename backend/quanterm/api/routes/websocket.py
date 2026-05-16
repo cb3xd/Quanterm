@@ -1,6 +1,6 @@
-from enum import StrEnum
 from fastapi import WebSocket, APIRouter
-from msgspec import DecodeError, Struct, json, convert
+from msgspec import DecodeError, json, convert
+from quanterm.api.types import FastApiMethods, Packet
 from quanterm.bus.base import get_event_bus
 from quanterm.schemas import FastApiSubscribePacket
 
@@ -8,17 +8,19 @@ event_bus = get_event_bus()
 router = APIRouter()
 
 
-class Methods(StrEnum):
-    SUBSCRIBE = "SUBSCRIBE"
-
-
-class Packet(Struct):
-    method: Methods
-    params: dict
-
-
-sub_decoder = json.Decoder(FastApiSubscribePacket)
 packet_decoder = json.Decoder(Packet)
+sub_decoder = json.Decoder(FastApiSubscribePacket)
+
+
+def process_message(msg: Packet, exchange_id: str):
+    if msg.method == FastApiMethods.SUBSCRIBE:
+        param_dict = msg.params
+        param_dict["event_id"] = f"{exchange_id}.subscribe"
+        if param_dict.get("interval") is None:
+            param_dict["interval"] = None
+        params = convert(param_dict, FastApiSubscribePacket)
+        print(params)
+        return params
 
 
 @router.websocket("/ws/{exchange}/streams")
@@ -28,11 +30,12 @@ async def ws_route(websocket: WebSocket, exchange: str):
         try:
             data = await websocket.receive_text()
             msg = packet_decoder.decode(data.encode())
-            if msg.method == "SUBSCRIBE":
-                param_dict = msg.params
-                param_dict["event_id"] = f"{exchange}.subscribe"
-                params = convert(param_dict, FastApiSubscribePacket)
+            params = process_message(msg=msg, exchange_id=exchange)
+            if params is None:
+                print("You did something wrong nigga")
+            else:
                 await event_bus.publish(params.event_id, params)
-        except DecodeError:
+        except DecodeError as e:
             print("Invalid request.")
+            print(e)
             continue

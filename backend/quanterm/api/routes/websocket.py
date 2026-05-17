@@ -1,8 +1,8 @@
 from fastapi import WebSocket, APIRouter
-
-from msgspec import DecodeError, Struct, json, convert
+from msgspec import DecodeError, Struct, json
 from quanterm.api.types import FastApiMethods, Packet
 from quanterm.bus.base import get_event_bus
+from quanterm.exchange.constants import ExchangeID
 from quanterm.schemas import FastApiSubscribePacket
 from quanterm.types import KlineIntervals, StreamTypes
 
@@ -12,8 +12,9 @@ router = APIRouter()
 
 class Parameters(Struct):
     symbol: str
-    stream_type: StreamTypes
     event_id: str
+    exchange_id: ExchangeID
+    stream_type: StreamTypes
     interval: KlineIntervals
 
 
@@ -22,10 +23,10 @@ encoder = json.Encoder()
 sub_decoder = json.Decoder(FastApiSubscribePacket)
 
 
-def process_message(msg: Packet, exchange_id: str):
+def process_message(msg: Packet):
     if msg.method == FastApiMethods.SUBSCRIBE:
         param_dict = msg.params
-        param_dict["event_id"] = f"{exchange_id}.subscribe"
+        param_dict["event_id"] = f"{param_dict.get('exchange_id')}.subscribe"
         if param_dict.get("interval") is None:
             param_dict["interval"] = None
         params_encoded = encoder.encode(param_dict)
@@ -45,20 +46,21 @@ def generate_event_id(
     return event_id
 
 
-@router.websocket("/ws/{exchange}/streams")
-async def ws_route(websocket: WebSocket, exchange: str):
+@router.websocket("/ws")
+async def ws_route(websocket: WebSocket):
     await websocket.accept()
     listeners = {}
     while True:
         try:
             data = await websocket.receive_text()
             msg = packet_decoder.decode(data.encode())
-            params = process_message(msg=msg, exchange_id=exchange)
+            params = process_message(msg=msg)
             if params is None:
-                print("You did something wrong nigga")
+                print("You royally fucked up")
             else:
+                exchange_id = params.event_id.split(".")[0]
                 event_id = generate_event_id(
-                    exchange,
+                    exchange_id,
                     params.symbol,
                     params.stream_type,
                     params.interval,

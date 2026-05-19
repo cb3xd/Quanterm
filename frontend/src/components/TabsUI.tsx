@@ -1,10 +1,9 @@
 import { useContext } from "react";
-import { Button } from "./components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "./components/ui/tabs";
+import { Button } from "./ui/button";
 import { RiCloseLine, RiAddLine } from "@remixicon/react";
-import { DataPortal } from "./TabDataPortalContext";
-import HomePage from "./Home";
-
+import HomePage from "@/views/Home";
+import { DataPortal } from "@/context/TabDataPortalContext";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
 export default function TabsUI() {
   const context = useContext(DataPortal);
 

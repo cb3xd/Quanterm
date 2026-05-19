@@ -1,12 +1,11 @@
-import { Button } from "./components/ui/button";
+import { useTabData } from "@/hooks/useTabData";
+import { Button } from "@/components/ui/button";
 import {
   Card,
+  CardTitle,
   CardDescription,
   CardFooter,
-  CardTitle,
-} from "./components/ui/card";
-import { useTabData } from "./UseTabData";
-
+} from "@/components/ui/card";
 function HomePage() {
   const [data, updateData] = useTabData();
   const activeView = data.view as number | undefined;

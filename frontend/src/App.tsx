@@ -1,4 +1,4 @@
-import TabContext from "./TabContext.tsx";
+import TabContext from "./context/TabContext";
 
 function App() {
   return <TabContext />;

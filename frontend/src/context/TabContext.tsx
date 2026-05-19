@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DataPortal } from "./TabDataPortalContext.ts";
 import type { TabContextValue } from "./TabDataPortalContext.ts";
-import TabsUI from "./TabsUI.tsx";
+import TabsUI from "@/components/TabsUI.tsx";
 type TabPageState = {
   page: string;
   tabName: string;

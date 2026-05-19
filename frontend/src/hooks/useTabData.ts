@@ -1,6 +1,5 @@
 import { useContext } from "react";
-import { DataPortal } from "./TabDataPortalContext";
-
+import { DataPortal } from "@/context/TabDataPortalContext";
 export function useTabData() {
   const context = useContext(DataPortal);
 

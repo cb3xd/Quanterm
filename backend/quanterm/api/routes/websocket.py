@@ -44,7 +44,6 @@ def generate_event_id(
     event_id = f"{exchange_id}.{symbol}.{stream_type}"
     if interval:
         event_id += f".{interval}"
-        print(event_id)
     return event_id
 
 
@@ -54,7 +53,6 @@ async def ws_loop(websocket: WebSocket, listeners: dict[str, Any]):
             data = await websocket.receive_text()
             msg = packet_decoder.decode(data.encode())
             params = process_message(msg=msg)
-            print(params)
             if params is None:
                 continue
 

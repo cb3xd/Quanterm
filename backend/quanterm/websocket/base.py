@@ -1,23 +1,23 @@
 import asyncio
 from abc import ABC, abstractmethod
 from websockets import ClientConnection, ConnectionClosed, Data
-from quanterm.bus.base import EventBus
+from quanterm.bus.base import EventBus, get_event_bus
 
 
 class BaseWS(ABC):
-    def __init__(self, event_bus: EventBus) -> None:
+    def __init__(self) -> None:
         self.active_streams: set[str] = set()
         self.uri: str = ""
         self.websocket: ClientConnection | None = None
         self._watch_task: asyncio.Task[None] | None = None
-        self.event_bus: EventBus = event_bus
+        self.event_bus: EventBus = get_event_bus()
         self.max_streams: int
 
     @abstractmethod
     async def connect(self) -> None: ...
 
     @abstractmethod
-    async def subscribe(self, symbols: list[str]) -> None: ...
+    async def subscribe(self, symbols: str) -> None: ...
 
     @abstractmethod
     async def _on_message(self, raw: Data) -> None: ...

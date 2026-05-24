@@ -78,7 +78,10 @@ async def ws_loop(websocket: WebSocket, listeners: dict[str, Any]):
             print(e)
             continue
         except Exception as e:
-            print(f"WS Error: {e}")
+            import traceback
+
+            print("Crash detected in WS loop.")
+            traceback.print_exception(e)
             break
 
 

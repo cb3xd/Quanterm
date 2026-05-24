@@ -1,0 +1,45 @@
+import asyncio
+from quanterm.bus.base import get_event_bus
+from quanterm.exchange.base import Exchange
+from quanterm.exchange.constants import ExchangeID
+from quanterm.exchange.registry import EXCHANGE_REGISTRY
+from quanterm.websocket.base import BaseWS
+
+
+class ExchangeManager:
+    def __init__(self) -> None:
+        self.active_exchanges: dict[ExchangeID, Exchange] = {}
+        self.websocket_instances: dict[ExchangeID, BaseWS] = {}
+        self.event_bus = get_event_bus()
+
+    def get_exchange(self, exchange_id: ExchangeID) -> Exchange:
+        if exchange_id not in self.active_exchanges:
+            exchange_class = EXCHANGE_REGISTRY[exchange_id]
+            if not exchange_class:
+                raise ValueError(f"Exchange {exchange_id} was never registered!")
+
+            self.active_exchanges[exchange_id] = exchange_class(self)
+        return self.active_exchanges[exchange_id]
+
+    async def connect_all_websockets(self):
+        if not self.active_exchanges:
+            print("No active exchanges to connect.")
+            return
+        print(f"Connecting websockets for {len(self.active_exchanges)} exchanges.")
+        tasks = [
+            exchange.connect_websocket() for exchange in self.active_exchanges.values()
+        ]
+        await asyncio.gather(*tasks)
+
+    async def get_all_symbols(self) -> dict[ExchangeID, list[str]]:
+        all_symbols = {}
+        for exchange_id, exchange_instance in self.active_exchanges.items():
+            try:
+                all_symbols[exchange_id] = await exchange_instance.get_symbols()
+            except Exception as e:
+                print(f"Error fetching from {exchange_id}: {e}")
+                all_symbols[exchange_id] = []
+        return all_symbols
+
+
+manager = ExchangeManager()

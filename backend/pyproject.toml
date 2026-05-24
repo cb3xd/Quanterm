@@ -7,6 +7,14 @@ name = "quanterm"
 version = "0.1.0"
 description = "Python async cryptocurrency trading terminal"
 requires-python = ">=3.10"
+dependencies = [
+    "aiohttp>=3.13.5",
+    "fastapi>=0.136.1",
+    "msgspec>=0.21.1",
+    "requests>=2.34.2",
+    "uvicorn>=0.47.0",
+    "websockets>=16.0",
+]
 
 
 [tool.hatch.build.targets.wheel]

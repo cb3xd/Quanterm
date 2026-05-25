@@ -1,6 +1,6 @@
 import asyncio
 from abc import ABC, abstractmethod
-from websockets import ClientConnection, ConnectionClosed, Data
+from websockets import ClientConnection, ConnectionClosed
 from quanterm.bus.base import EventBus, get_event_bus
 
 
@@ -17,10 +17,10 @@ class BaseWS(ABC):
     async def connect(self) -> None: ...
 
     @abstractmethod
-    async def subscribe(self, symbols: str) -> None: ...
+    async def subscribe(self, stream_id: str) -> None: ...
 
     @abstractmethod
-    async def _on_message(self, raw: Data) -> None: ...
+    async def _on_message(self, raw: str) -> None: ...
 
     @abstractmethod
     async def disconnect(self) -> None: ...

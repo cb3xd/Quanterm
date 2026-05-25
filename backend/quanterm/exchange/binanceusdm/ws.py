@@ -1,8 +1,9 @@
 import asyncio
+from typing import override
 import msgspec
 import websockets
 import json
-from quanterm.schemas import TradePacket
+from quanterm.schemas import StreamDefinition, TradePacket
 from quanterm.exchange.binanceusdm.schemas import Packet
 from quanterm.exchange.binanceusdm.streams import BinanceStreamDefinitions
 from quanterm.websocket.base import BaseWS
@@ -11,18 +12,20 @@ from quanterm.websocket.base import BaseWS
 class BinanceWebsocket(BaseWS):
     def __init__(self) -> None:
         super().__init__()
-        self.uri = "wss://fstream.binance.com/market/stream"
-        self.streams = BinanceStreamDefinitions.streams
-        self.msg_decoder = msgspec.json.Decoder(Packet)
-        self.max_streams = 1024
+        self.uri: str = "wss://fstream.binance.com/market/stream"
+        self.streams: dict[str, StreamDefinition] = BinanceStreamDefinitions.streams
+        self.msg_decoder: msgspec.json.Decoder[Packet] = msgspec.json.Decoder(Packet)
+        self.max_streams: int = 1024
 
+    @override
     async def connect(self) -> None:
-        self.websocket = await websockets.connect(self.uri)
-        self._watch_task = asyncio.create_task(self._listen())
+        self.websocket: websockets.ClientConnection | None = await websockets.connect(self.uri)
+        self._watch_task: asyncio.Task[None] | None = asyncio.create_task(self._listen())
 
+    @override
     async def disconnect(self) -> None:
         if self._watch_task:
-            self._watch_task.cancel()
+            _ = self._watch_task.cancel()
             try:
                 await self._watch_task
             except asyncio.CancelledError:
@@ -36,6 +39,7 @@ class BinanceWebsocket(BaseWS):
 
         print("WS Disconnected")
 
+    @override
     async def subscribe(self, stream_id: str):
         if self.active_streams.__len__() == self.max_streams:
             print("Max streams reached")
@@ -54,6 +58,7 @@ class BinanceWebsocket(BaseWS):
 
         await self.websocket.send(json.dumps(subscribe_message))
 
+    @override
     async def _on_message(self, raw: str):
         if "stream" not in raw:
             return

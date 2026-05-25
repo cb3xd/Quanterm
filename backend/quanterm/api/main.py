@@ -1,8 +1,7 @@
-import quanterm.exchange
-
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from quanterm.api.routes.websocket import router
+from quanterm.api.routes.websocket import router as ws_router
+from quanterm.api.routes.symbols import router as symbols_router
 from quanterm.exchange.constants import ExchangeID
 from quanterm.exchange.exchange_manager import manager
 
@@ -15,4 +14,5 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-app.include_router(router)
+app.include_router(ws_router)
+app.include_router(symbols_router, prefix="/api")

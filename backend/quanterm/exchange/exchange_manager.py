@@ -26,19 +26,20 @@ class ExchangeManager:
             print("No active exchanges to connect.")
             return
         print(f"Connecting websockets for {len(self.active_exchanges)} exchanges.")
-        tasks = [
-            exchange.connect_websocket() for exchange in self.active_exchanges.values()
-        ]
+        tasks = [exchange.connect_websocket() for exchange in self.active_exchanges.values()]
         await asyncio.gather(*tasks)
 
-    async def get_all_symbols(self) -> dict[ExchangeID, list[str]]:
-        all_symbols = {}
+    async def get_all_symbols(self) -> dict[str, set[ExchangeID]]:
+        all_symbols: dict[str, set[ExchangeID]] = {}
         for exchange_id, exchange_instance in self.active_exchanges.items():
             try:
-                all_symbols[exchange_id] = await exchange_instance.get_symbols()
+                symbols = await exchange_instance.get_symbols()
+                for symbol in symbols:
+                    all_symbols.setdefault(symbol, set()).add(exchange_id)
+
             except Exception as e:
                 print(f"Error fetching from {exchange_id}: {e}")
-                all_symbols[exchange_id] = []
+
         return all_symbols
 
 

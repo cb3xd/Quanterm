@@ -21,9 +21,9 @@ dependencies = [
 packages = ["quanterm"]
 
 [tool.basedpyright]
-# Sets the base level to 'basic' (equivalent to standard pyright's non-strict mode)
 typeCheckingMode = "basic"
 
 
 [tool.ruff]
 target-version = "py314"
+line-length = 120

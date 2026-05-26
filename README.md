@@ -15,6 +15,7 @@ I found that Tradingview is way too slow in updating price and its backtesting e
 | **Exchange abstractions**  | Pluggable exchange system. Base classes for exchange connections, bridges, and WebSocket clients                   | *exchange/base.py, exchange/base_bridge.py, exchange/exchange_manager.py, exchange/registry.py* |
 | **Binance USDM**           | Concrete Binance Futures implementation. WebSocket client, REST symbol fetcher, stream mappers for trades & klines | *exchamge/binanceusdm/ws.py, client.py, bridge.py, schemas.py, external_api.py*                 |
 | **Shared types & schemas** | Core enums (StreamTypes, KlineIntervals), packet structs (TradePacket, KlinePacket, FastApiSubscribePacket)        | *types.py, schemas.py*                                                                          |
+
 **Data flow:** Client sends sub packet -> FastAPI route -> EventBus -> Binance bridge translates to exchagne stream ID -> Binance WebSocket -> decoded data published back to EventBus -> (future) pushed to subscribed clients.
 
 Features:

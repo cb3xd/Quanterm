@@ -10,7 +10,9 @@ export async function fetchApiData() {
     apiData.loading = true;
 
     const response = await fetch('http://localhost:8000/api/all_exchange_symbols');
+    console.log(response);
     const result = await response.json();
+    console.log(result);
 
     apiData.data = result;
     apiData.loading = false;

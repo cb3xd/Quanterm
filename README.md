@@ -33,6 +33,7 @@ Features:
 | dataStore.svelte.js | Reactive store that fetches GET /api/all_exchange_symbols and exposes data/loading/error states.                      |
 | UI components       | shadcn stuffs                                                                                                         |
 | Styling             | Dark/light CSS variables, JetBrains Mono, shadcn-svelte + tw-animate-css                                              |
+
 The frontend is still in its early stage.
 ## Tech Stack
 

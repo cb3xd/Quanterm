@@ -1,3 +1,4 @@
+
 # Quanterm
 Charting and analysis app for crypto/defi
 
@@ -6,6 +7,7 @@ I found that Tradingview is way too slow in updating price and its backtesting e
 
 ## Architecture
 **Backend (Python) - backend/quanterm/**
+
 **Framework:** FastAPI + WebSockets, using msgspec for fast serialization and asyncio for concurrency.
 
 | Layer                      | What it does                                                                                                       | Key files                                                                                       |
@@ -25,6 +27,7 @@ Features:
 - LifeSpan context manager for clean startup and shutdown
 
 **Frontend (Svelte) - frontend/**
+
 **Stack**: Svelte 5 + Vite + Tailwind CSS + shadcn-svelte (Lyra style)
 
 | Part                | What it does                                                                                                          |
@@ -68,7 +71,80 @@ cd frontend
 bun install
 bun run dev
 ```
-Runs at `localhost:5171` (Vite default)
+Runs at `localhost:5173` (Vite default)
+
+**Performance**
+
+To make our beloved silicon chips dont explode, test with this script and monitor with task manager or btop/htop filtering for uvicorn.
+
+The script subscribes to all pairs available 
+```bash
+python test/perf_test.py
+```
+
+**Usage Options**
+
+Run with a custom duration, default is 30 seconds:
+```bash
+python test/perf_test.py --duration 60
+```
+
+Enable system resource monitoring (CPU/Memory tracking):
+```bash
+python test/perf_test.py --monitor
+```
+
+You can also combine options:
+```bash
+python test/perf_test.py --duration 120 --monitor --verbose
+```
+
+**What to Expect**
+
+The script will
+1. Fetch all available trading pairs from the backend
+2. Subscribe to each pair's trade stream sequentially (0.15s delay between each to avoid getting rate limited by the exchange)
+3. Measure throughput, latency, and error rates during the test window
+4. Output results to console and save metrics to perf_results.json
+
+**Test Results**
+
+System specs: Intel i5 10th gen with 16 GB RAM
+
+```bash
+python test/perf_test.py --monitor --duration 60
+```
+
+| Metric                    | Value         |
+| ------------------------- | ------------- |
+| Active Streams Subscribed | 747           |
+| Messages Received         | 76,999        |
+| Throughput                | 1,283.3 msg/s |
+| Data received             | 14,162.7 KiB  |
+| Errors                    | 0             |
+| CPU Avg                   | 40.3%         |
+| CPU Max                   | 44.8%         |
+| CPU Min                   | 36.3%         |
+| Mem Avg                   | 77.7 MB       |
+| Mem Max                   | 77.7 MB       |
+| Mem Min                   | 77.7 MB       |
+*CPU Usage is in single core, 100% would mean 1 whole core is being used up.*
+
+**Monitoring in Real-Time**
+While the test runs, monitor system usage in a separate terminal:
+**Linux/Mac:**
+```bash
+btop
+# or
+htop -p $(pgrep -f uvicorn | paste -sd, -)
+```
+
+**Windows**
+```bash
+tasklist /FI "IMAGENAME eq python.exe" /V
+```
+
+The test is non-invasive and representative of production trade stream loads (Hopefully anyways)
 
 ## Roadmap
 
@@ -96,3 +172,4 @@ Runs at `localhost:5171` (Vite default)
   - [ ] Spectral graph analysis for market structure
   - [ ] Hybrid LSTM + CNN architectures for time-series forecasting
   - [ ] Mixture Density Networks (MDNs) for predicting price distributions
+

@@ -39,7 +39,7 @@ class EventBus:
         if listeners:
             async with asyncio.TaskGroup() as tg:
                 for listener in listeners:
-                    tg.create_task(listener(message))
+                    tg.create_task(self._safe_execute(listener, message))
 
     def remove_listener(self, event: str, handler: EventHandler) -> None:
         if event in self._listeners:
@@ -49,6 +49,12 @@ class EventBus:
 
     def get_listeners(self, event: str) -> list[EventHandler]:
         return self._listeners[event].copy()
+
+    async def _safe_execute(self, handler: EventHandler, message: Struct) -> None:
+        try:
+            await handler(message)
+        except Exception as e:
+            print(f"CRITICAL: Event handler crashed {e}")
 
 
 _event_bus_instance = EventBus()

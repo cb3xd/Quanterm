@@ -1,6 +1,7 @@
+import asyncio
 from typing import Any
-from fastapi import WebSocket, APIRouter
-from msgspec import DecodeError, Struct, json, to_builtins
+from fastapi import WebSocket, APIRouter, WebSocketDisconnect
+from msgspec import DecodeError, Struct, convert, json, to_builtins
 from quanterm.api.types import FastApiMethods, Packet
 from quanterm.bus.base import get_event_bus
 from quanterm.exchange.constants import ExchangeID
@@ -25,14 +26,12 @@ sub_decoder = json.Decoder(FastApiSubscribePacket)
 
 
 def process_message(msg: Packet):
-    if msg.method == FastApiMethods.SUBSCRIBE:
-        param_dict = msg.params
-        param_dict["event_id"] = f"{param_dict.get('exchange_id')}.subscribe"
-        if param_dict.get("interval") is None:
-            param_dict["interval"] = None
-        params_encoded = encoder.encode(param_dict)
-        params = sub_decoder.decode(params_encoded)
-        return params
+    if msg.method != FastApiMethods.SUBSCRIBE:
+        return None
+    param_dict = msg.params
+    param_dict["event_id"] = f"{param_dict.get('exchange_id')}.subscribe"
+
+    return convert(param_dict, FastApiSubscribePacket)
 
 
 def generate_event_id(
@@ -50,6 +49,7 @@ def generate_event_id(
 async def ws_loop(websocket: WebSocket, listeners: dict[str, Any]):
     while True:
         try:
+            # 1. Listen for new inbound messages
             data = await websocket.receive_text()
             msg = packet_decoder.decode(data.encode())
             params = process_message(msg=msg)
@@ -64,23 +64,51 @@ async def ws_loop(websocket: WebSocket, listeners: dict[str, Any]):
                 params.interval,
             )
 
-            async def send_to_client(data: Struct):
-                try:
-                    await websocket.send_json(to_builtins(data))
-                except Exception as e:
-                    print(e)
+            # Prevent duplicate event bus listeners for the same connection
+            if event_id in listeners:
+                continue
 
-            listener = event_bus.on(event_id, send_to_client)
+            # 2. Defensive closure with a strict write timeout
+            def make_callback(eid):
+                async def send_to_client(data: Struct):
+                    try:
+                        # If a socket hangs/clogs, drop it after 1.0 second
+                        # instead of blocking the EventBus task loop
+                        await asyncio.wait_for(
+                            websocket.send_json(to_builtins(data)), timeout=1.0
+                        )
+                    except Exception:
+                        # Auto-evict from the local tracker if writes fail
+                        if eid in listeners:
+                            try:
+                                listeners[eid].unregister()
+                            except Exception:
+                                pass
+                            del listeners[eid]
+
+                return send_to_client
+
+            # Attach to the global event bus
+            listener = event_bus.on(event_id, make_callback(event_id))
             listeners[event_id] = listener
+
+            # Fire-and-forget publish execution
             await event_bus.publish(params.event_id, params)
-        except DecodeError as e:
-            print("Invalid request.")
-            print(e)
+
+        except WebSocketDisconnect:
+            # Caught first! Prevents normal disconnections from spamming your error logs
+            print("ℹ️ Client disconnected cleanly.")
+            break
+
+        except DecodeError:
+            print("❌ Invalid packet format.")
             continue
+
         except Exception as e:
             import traceback
 
-            print("Crash detected in WS loop.")
+            # Safety net for actual unexpected system code crashes
+            print("⚠️ Unexpected crash detected inside WS loop.")
             traceback.print_exception(e)
             break
 
@@ -89,6 +117,17 @@ async def ws_loop(websocket: WebSocket, listeners: dict[str, Any]):
 async def ws_route(websocket: WebSocket):
     await websocket.accept()
     listeners: dict[str, Any] = {}
-    await ws_loop(websocket=websocket, listeners=listeners)
-    for listener in listeners.values():
-        listener.unregister()
+
+    try:
+        await ws_loop(websocket=websocket, listeners=listeners)
+    finally:
+        # This block is structurally guaranteed to run by the python runtime,
+        # even if Uvicorn forcefully cancels the task via an asyncio.CancelledError.
+        print(
+            f"🧹 Sweeping up: Clearing {len(listeners)} active event bus listeners..."
+        )
+        for listener in list(listeners.values()):
+            try:
+                listener.unregister()
+            except Exception:
+                pass

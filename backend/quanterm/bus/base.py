@@ -21,6 +21,7 @@ class Listener:
 class EventBus:
     def __init__(self) -> None:
         self._listeners: defaultdict[str, list[EventHandler]] = defaultdict(list)
+        self._background_tasks: set[asyncio.Task] = set()
 
     def on(
         self, event: str, handler: Optional[EventHandler] = None
@@ -36,10 +37,10 @@ class EventBus:
 
     async def publish(self, event: str, message: Struct) -> None:
         listeners = self._listeners.get(event, [])
-        if listeners:
-            async with asyncio.TaskGroup() as tg:
-                for listener in listeners:
-                    tg.create_task(self._safe_execute(listener, message))
+        for listener in listeners:
+            task = asyncio.create_task(self._safe_execute(listener, message))
+            self._background_tasks.add(task)
+            task.add_done_callback(self._background_tasks.discard)
 
     def remove_listener(self, event: str, handler: EventHandler) -> None:
         if event in self._listeners:

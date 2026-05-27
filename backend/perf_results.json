@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-05-27T14:03:00.063326",
+  "ws_url": "ws://127.0.0.1:8000/ws",
+  "duration_seconds": 60,
+  "streams_subscribed": 747,
+  "messages_received": 76999,
+  "throughput_msg_per_sec": 1283.3166666666666,
+  "data_received_kib": 14162.662109375,
+  "errors": 0,
+  "system": {
+    "cpu_avg": 40.30362080315997,
+    "cpu_max": 44.8,
+    "cpu_min": 36.3,
+    "mem_avg": 77.6875,
+    "mem_max": 77.6875,
+    "mem_min": 77.6875,
+    "samples": 1519
+  }
+}

@@ -3,7 +3,6 @@ from quanterm.bus.base import get_event_bus
 from quanterm.exchange.base import Exchange
 from quanterm.exchange.constants import ExchangeID
 from quanterm.exchange.registry import EXCHANGE_REGISTRY
-from quanterm.types import KlineIntervals
 from quanterm.websocket.base import BaseWS
 
 

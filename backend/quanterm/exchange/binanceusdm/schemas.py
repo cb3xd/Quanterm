@@ -97,7 +97,7 @@ def map_trade(trade: BinanceTrade) -> TradePacket:
         size=trade.q,
         normal_size=trade.nq,
         timestamp=trade.T,
-        maker=trade.m,
+        is_buy=trade.m,
         event_id=generate_event_id(
             ExchangeID.binanceusdm, trade.s, StreamTypes.trade_stream, None
         ),

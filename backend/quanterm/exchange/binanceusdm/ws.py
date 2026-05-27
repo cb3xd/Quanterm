@@ -9,6 +9,14 @@ from quanterm.exchange.binanceusdm.streams import BinanceStreamDefinitions
 from quanterm.websocket.base import BaseWS
 
 
+class BaseEnvelope(msgspec.Struct):
+    stream: str | None = None
+    id: int | None = None
+
+
+_envelope_decoder = msgspec.json.Decoder(BaseEnvelope)
+
+
 class BinanceWebsocket(BaseWS):
     def __init__(self) -> None:
         super().__init__()
@@ -64,14 +72,20 @@ class BinanceWebsocket(BaseWS):
 
     @override
     async def _on_message(self, raw: bytes):
-        if b"stream" not in raw:
-            return
+        try:
+            envelope = _envelope_decoder.decode(raw)
+            if envelope.stream is None:
+                return
 
-        packet = self.msg_decoder.decode(raw)
+            packet = self.msg_decoder.decode(raw)
 
-        stream_type = packet.stream.split("@")[1]
-        stream = self.streams[stream_type]
+            stream_type = packet.stream.split("@")[1]
+            stream = self.streams[stream_type]
 
-        data: TradePacket = stream.mapper(msgspec.convert(packet.data, stream.schema))
+            data: TradePacket = stream.mapper(
+                msgspec.convert(packet.data, stream.schema)
+            )
 
-        await self.event_bus.publish(data.event_id, data)
+            await self.event_bus.publish(data.event_id, data)
+        except Exception as e:
+            print(e)

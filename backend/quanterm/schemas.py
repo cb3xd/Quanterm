@@ -11,7 +11,7 @@ class TradePacket(Struct, frozen=False):
     size: str
     normal_size: str
     timestamp: int
-    maker: bool
+    is_buy: bool
     event_id: str
 
 

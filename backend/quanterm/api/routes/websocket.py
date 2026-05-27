@@ -1,7 +1,7 @@
 import asyncio
 from typing import Any
 from fastapi import WebSocket, APIRouter, WebSocketDisconnect
-from msgspec import DecodeError, Struct, convert, json, to_builtins
+from msgspec import DecodeError, Struct, convert, json
 from quanterm.api.types import FastApiMethods, Packet
 from quanterm.bus.base import get_event_bus
 from quanterm.exchange.constants import ExchangeID
@@ -75,7 +75,7 @@ async def ws_loop(websocket: WebSocket, listeners: dict[str, Any]):
                         # If a socket hangs/clogs, drop it after 1.0 second
                         # instead of blocking the EventBus task loop
                         await asyncio.wait_for(
-                            websocket.send_json(to_builtins(data)), timeout=1.0
+                            websocket.send_bytes(encoder.encode(data)), timeout=1.0
                         )
                     except Exception:
                         # Auto-evict from the local tracker if writes fail

@@ -6,66 +6,66 @@ import msgspec
 from quanterm.types import KlineIntervals
 
 
-class RateLimit(msgspec.Struct):
+class RateLimit(msgspec.Struct, rename="camel"):
     interval: str
-    intervalNum: int
+    interval_num: int
     limit: int
-    rateLimitType: str
+    rate_limit_type: str
 
 
-class Asset(msgspec.Struct):
+class Asset(msgspec.Struct, rename="camel"):
     asset: str
-    marginAvailable: bool
-    autoAssetExchange: str | None
+    margin_available: bool
+    auto_asset_exchange: str | None
 
 
-class SymbolFilter(msgspec.Struct):
-    filterType: str
-    maxPrice: str | None = None
-    minPrice: str | None = None
-    tickSize: str | None = None
-    maxQty: str | None = None
-    minQty: str | None = None
-    stepSize: str | None = None
+class SymbolFilter(msgspec.Struct, rename="camel"):
+    filter_type: str
+    max_price: str | None = None
+    min_price: str | None = None
+    tick_size: str | None = None
+    max_qty: str | None = None
+    min_qty: str | None = None
+    step_size: str | None = None
     limit: int | None = None
     notional: str | None = None
-    multiplierUp: str | None = None
-    multiplierDown: str | None = None
-    multiplierDecimal: str | None = None
+    multiplier_up: str | None = None
+    multiplier_down: str | None = None
+    multiplier_decimal: str | None = None
 
 
-class Symbol(msgspec.Struct):
+class Symbol(msgspec.Struct, rename="camel"):
     symbol: str
     pair: str
-    contractType: str
-    deliveryDate: int
-    onboardDate: int
+    contract_type: str
+    delivery_date: int
+    onboard_date: int
     status: str
-    maintMarginPercent: str
-    requiredMarginPercent: str
-    baseAsset: str
-    quoteAsset: str
-    marginAsset: str
-    pricePrecision: int
-    quantityPrecision: int
-    baseAssetPrecision: int
-    quotePrecision: int
-    underlyingType: str
-    underlyingSubType: list[str]
-    triggerProtect: str
+    maint_margin_percent: str
+    required_margin_percent: str
+    base_asset: str
+    quote_asset: str
+    margin_asset: str
+    price_precision: int
+    quantity_precision: int
+    base_asset_precision: int
+    quote_precision: int
+    underlying_type: str
+    underlying_sub_type: list[str]
+    trigger_protect: str
     filters: list[SymbolFilter]
-    orderTypes: list[str]
-    timeInForce: list[str]
-    liquidationFee: str
-    marketTakeBound: str
+    order_types: list[str]
+    time_in_force: list[str]
+    liquidation_fee: str
+    market_take_bound: str
 
-    settlePlan: int | None = None
+    settle_plan: int | None = None
 
 
-class ExchangeInfo(msgspec.Struct):
-    exchangeFilters: list[None]
-    rateLimits: list[RateLimit]
-    serverTime: int
+class ExchangeInfo(msgspec.Struct, rename="camel"):
+    exchange_filters: list[None]
+    rate_limits: list[RateLimit]
+    server_time: int
     assets: list[Asset]
     symbols: list[Symbol]
     timezone: str

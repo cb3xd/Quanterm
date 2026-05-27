@@ -1,7 +1,5 @@
 import asyncio
 
-import msgspec
-
 from quanterm.exchange.binanceusdm.external_api import fetch_kline
 from quanterm.types import KlineIntervals
 

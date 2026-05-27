@@ -3,6 +3,7 @@ from quanterm.bus.base import get_event_bus
 from quanterm.exchange.base import Exchange
 from quanterm.exchange.constants import ExchangeID
 from quanterm.exchange.registry import EXCHANGE_REGISTRY
+from quanterm.types import KlineIntervals
 from quanterm.websocket.base import BaseWS
 
 
@@ -11,6 +12,7 @@ class ExchangeManager:
         self.active_exchanges: dict[ExchangeID, Exchange] = {}
         self.websocket_instances: dict[ExchangeID, BaseWS] = {}
         self.event_bus = get_event_bus()
+        self.supported_symbols: dict[str, set[ExchangeID]] = {}
 
     def get_exchange(self, exchange_id: ExchangeID) -> Exchange:
         if exchange_id not in self.active_exchanges:
@@ -26,21 +28,21 @@ class ExchangeManager:
             print("No active exchanges to connect.")
             return
         print(f"Connecting websockets for {len(self.active_exchanges)} exchanges.")
-        tasks = [exchange.connect_websocket() for exchange in self.active_exchanges.values()]
+        tasks = [
+            exchange.connect_websocket() for exchange in self.active_exchanges.values()
+        ]
         await asyncio.gather(*tasks)
+        await self._get_all_symbols()
 
-    async def get_all_symbols(self) -> dict[str, set[ExchangeID]]:
-        all_symbols: dict[str, set[ExchangeID]] = {}
+    async def _get_all_symbols(self) -> None:
         for exchange_id, exchange_instance in self.active_exchanges.items():
             try:
                 symbols = await exchange_instance.get_symbols()
                 for symbol in symbols:
-                    all_symbols.setdefault(symbol, set()).add(exchange_id)
+                    self.supported_symbols.setdefault(symbol, set()).add(exchange_id)
 
             except Exception as e:
                 print(f"Error fetching from {exchange_id}: {e}")
-
-        return all_symbols
 
 
 manager = ExchangeManager()

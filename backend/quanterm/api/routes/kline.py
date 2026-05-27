@@ -6,8 +6,7 @@ router = APIRouter()
 _encoder = json.Encoder()
 
 
-@router.get("/all_exchange_symbols")
-async def get_all_exchange_symbols():
-    symbols = manager.supported_symbols
-    serialized_bytes = _encoder.encode(symbols)
+@router.get("/kline")
+async def get_kline():
+    symbol = 
     return Response(content=serialized_bytes, media_type="application/json")

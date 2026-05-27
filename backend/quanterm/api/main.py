@@ -1,6 +1,5 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from quanterm.api.routes.debug import router
 from quanterm.api.routes.websocket import router as ws_router
 from quanterm.api.routes.symbols import router as symbols_router
 from quanterm.exchange.constants import ExchangeID
@@ -27,5 +26,4 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(ws_router)
-app.include_router(router)
 app.include_router(symbols_router, prefix="/api")

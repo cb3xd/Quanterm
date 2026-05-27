@@ -1,19 +1,19 @@
 {
-  "timestamp": "2026-05-27T14:03:00.063326",
+  "timestamp": "2026-05-27T18:02:42.555657",
   "ws_url": "ws://127.0.0.1:8000/ws",
-  "duration_seconds": 60,
+  "duration_seconds": 600,
   "streams_subscribed": 747,
-  "messages_received": 76999,
-  "throughput_msg_per_sec": 1283.3166666666666,
-  "data_received_kib": 14162.662109375,
+  "messages_received": 381674,
+  "throughput_msg_per_sec": 636.1233333333333,
+  "data_received_kib": 70121.1572265625,
   "errors": 0,
   "system": {
-    "cpu_avg": 40.30362080315997,
-    "cpu_max": 44.8,
-    "cpu_min": 36.3,
-    "mem_avg": 77.6875,
-    "mem_max": 77.6875,
-    "mem_min": 77.6875,
-    "samples": 1519
+    "cpu_avg": 47.26390651085142,
+    "cpu_max": 154.7,
+    "cpu_min": 4.8,
+    "mem_avg": 76.36765638042571,
+    "mem_max": 89.3046875,
+    "mem_min": 73.85546875,
+    "samples": 5990
   }
 }

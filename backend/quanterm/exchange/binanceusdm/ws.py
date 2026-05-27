@@ -19,8 +19,12 @@ class BinanceWebsocket(BaseWS):
 
     @override
     async def connect(self) -> None:
-        self.websocket: websockets.ClientConnection | None = await websockets.connect(self.uri)
-        self._watch_task: asyncio.Task[None] | None = asyncio.create_task(self._listen())
+        self.websocket: websockets.ClientConnection | None = await websockets.connect(
+            self.uri
+        )
+        self._watch_task: asyncio.Task[None] | None = asyncio.create_task(
+            self._listen()
+        )
 
     @override
     async def disconnect(self) -> None:
@@ -59,11 +63,11 @@ class BinanceWebsocket(BaseWS):
         await self.websocket.send(json.dumps(subscribe_message))
 
     @override
-    async def _on_message(self, raw: str):
-        if "stream" not in raw:
+    async def _on_message(self, raw: bytes):
+        if b"stream" not in raw:
             return
 
-        packet = self.msg_decoder.decode(raw.encode())
+        packet = self.msg_decoder.decode(raw)
 
         stream_type = packet.stream.split("@")[1]
         stream = self.streams[stream_type]

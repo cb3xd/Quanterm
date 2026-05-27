@@ -1,6 +1,6 @@
 from quanterm.bus.utils import generate_event_id
 from quanterm.exchange.constants import ExchangeID
-from quanterm.types import StreamTypes
+from quanterm.types import KlineIntervals, StreamTypes
 from quanterm.schemas import TradePacket, KlinePacket
 from msgspec import Struct
 
@@ -33,7 +33,26 @@ class BinanceTrade(Struct):
     m: bool
 
 
-class BinanceKline(Struct):
+class BinanceKlineData(Struct):
+    t: int
+    T: int
+    s: str
+    i: KlineIntervals
+    f: int
+    L: int
+    o: str
+    h: str
+    l: str
+    c: str
+    v: str
+    n: int
+    x: bool
+    q: str
+    V: str
+    Q: str
+
+
+class BinanceKlineEnvelope(Struct):
     # {
     #   "e": "kline",     // Event type
     #   "E": 1638747660000,   // Event time
@@ -62,7 +81,7 @@ class BinanceKline(Struct):
     e: str
     E: int
     s: str
-    k: dict  # We'll parse the inner dict separately in the mapper
+    k: BinanceKlineData  # We'll parse the inner dict separately in the mapper
 
 
 class Packet(Struct):
@@ -85,26 +104,28 @@ def map_trade(trade: BinanceTrade) -> TradePacket:
     )
 
 
-def map_kline(kl: BinanceKline) -> KlinePacket:
+def map_kline(kl: BinanceKlineEnvelope) -> KlinePacket:
     kline_data = kl.k
     return KlinePacket(
         exchange_id=ExchangeID.binanceusdm,
+        open_time=kline_data.t,
+        close_time=kline_data.T,
         symbol=kl.s,
-        interval=kline_data["i"],
-        open_price=kline_data["o"],
-        close_price=kline_data["c"],
-        high_price=kline_data["h"],
-        low_price=kline_data["l"],
-        volume=kline_data["v"],
-        trades=kline_data["n"],
-        is_closed=kline_data["x"],
-        quote_volume=kline_data["q"],
-        taker_buy_base_volume=kline_data["V"],
-        taker_buy_quote_volume=kline_data["Q"],
+        interval=kline_data.i,
+        open_price=kline_data.o,
+        close_price=kline_data.c,
+        high_price=kline_data.h,
+        low_price=kline_data.l,
+        volume=kline_data.v,
+        trades=kline_data.n,
+        is_closed=kline_data.x,
+        quote_volume=kline_data.q,
+        taker_buy_base_volume=kline_data.V,
+        taker_buy_quote_volume=kline_data.Q,
         event_id=generate_event_id(
             ExchangeID.binanceusdm,
             kl.s,
             StreamTypes.kline_stream,
-            extra=kline_data["i"],
+            extra=kline_data.i,
         ),
     )

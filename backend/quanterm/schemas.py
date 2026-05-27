@@ -17,6 +17,8 @@ class TradePacket(Struct, frozen=False):
 
 class KlinePacket(Struct, frozen=False):
     exchange_id: str
+    open_time: int
+    close_time: int
     symbol: str
     interval: str
     open_price: str

@@ -3,7 +3,7 @@ from quanterm.schemas import StreamDefinition
 from quanterm.types import KlineIntervals
 from quanterm.exchange.binanceusdm.schemas import (
     BinanceTrade,
-    BinanceKline,
+    BinanceKlineEnvelope,
     map_trade,
     map_kline,
 )
@@ -33,6 +33,6 @@ class BinanceStreamDefinitions:
     # Add kline streams for each interval
     for interval in KlineIntervals:
         streams[f"kline_{interval.value}"] = StreamDefinition(
-            schema=BinanceKline,
+            schema=BinanceKlineEnvelope,
             mapper=map_kline,
         )

@@ -20,7 +20,7 @@ class BaseWS(ABC):
     async def subscribe(self, stream_id: str) -> None: ...
 
     @abstractmethod
-    async def _on_message(self, raw: str) -> None: ...
+    async def _on_message(self, raw: bytes) -> None: ...
 
     @abstractmethod
     async def disconnect(self) -> None: ...
@@ -32,8 +32,8 @@ class BaseWS(ABC):
 
         while True:
             try:
-                async for msg in self.websocket:
-                    await self._on_message(msg)
+                msg = await self.websocket.recv(decode=False)
+                await self._on_message(msg)
             except ConnectionClosed:
                 print("Reconnecting..")
                 await asyncio.sleep(1)

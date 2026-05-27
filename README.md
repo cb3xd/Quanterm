@@ -128,7 +128,8 @@ python test/perf_test.py --monitor --duration 60
 | Mem Avg                   | 77.7 MB       |
 | Mem Max                   | 77.7 MB       |
 | Mem Min                   | 77.7 MB       |
-*CPU Usage is in single core, 100% would mean 1 whole core is being used up.*
+
+*CPU usage is in single core, 100% would mean 1 whole core is being used up.*
 
 **Monitoring in Real-Time**
 While the test runs, monitor system usage in a separate terminal:

@@ -11,7 +11,6 @@ class ExchangeManager:
         self.active_exchanges: dict[ExchangeID, Exchange] = {}
         self.websocket_instances: dict[ExchangeID, BaseWS] = {}
         self.event_bus = get_event_bus()
-        self.supported_symbols: dict[str, set[ExchangeID]] = {}
 
     def get_exchange(self, exchange_id: ExchangeID) -> Exchange:
         if exchange_id not in self.active_exchanges:
@@ -31,17 +30,6 @@ class ExchangeManager:
             exchange.connect_websocket() for exchange in self.active_exchanges.values()
         ]
         await asyncio.gather(*tasks)
-        await self._get_all_symbols()
-
-    async def _get_all_symbols(self) -> None:
-        for exchange_id, exchange_instance in self.active_exchanges.items():
-            try:
-                symbols = await exchange_instance.get_symbols()
-                for symbol in symbols:
-                    self.supported_symbols.setdefault(symbol, set()).add(exchange_id)
-
-            except Exception as e:
-                print(f"Error fetching from {exchange_id}: {e}")
 
 
 manager = ExchangeManager()

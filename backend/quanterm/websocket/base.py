@@ -27,7 +27,6 @@ class BaseWS(ABC):
 
     async def _listen(self) -> None:
         if self.websocket is None:
-            print("Connect first")
             return
 
         while True:
@@ -35,6 +34,4 @@ class BaseWS(ABC):
                 msg = await self.websocket.recv(decode=False)
                 await self._on_message(msg)
             except ConnectionClosed:
-                print("Reconnecting..")
-                await asyncio.sleep(1)
-                await self.connect()
+                self.disconnect()

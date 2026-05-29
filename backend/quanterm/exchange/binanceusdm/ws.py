@@ -82,9 +82,7 @@ class BinanceWebsocket(BaseWS):
             stream_type = packet.stream.split("@")[1]
             stream = self.streams[stream_type]
 
-            data: TradePacket = stream.mapper(
-                msgspec.convert(packet.data, stream.schema)
-            )
+            data = stream.mapper(msgspec.convert(packet.data, stream.schema))
 
             await self.event_bus.publish(data.event_id, data)
         except Exception as e:

@@ -34,4 +34,4 @@ class BaseWS(ABC):
                 msg = await self.websocket.recv(decode=False)
                 await self._on_message(msg)
             except ConnectionClosed:
-                self.disconnect()
+                await self.disconnect()

@@ -30,7 +30,7 @@
     <Dialog.Header>
       <Dialog.Title>Available Symbols</Dialog.Title>
       <Dialog.Description>
-        Currently the only supported exchange is Binance USDM futures.
+        Currently the only supported exchange is Binance USDM.
       </Dialog.Description>
     </Dialog.Header>
     <Input type="symbolSearch" placeholder="BTCUSDT" bind:value={searchInput}
@@ -50,7 +50,8 @@
             class="flex w-full justify-between"
             onclick={() => fetchKline(exchange, symbol, "1m")}
             ><span>{symbol.toUpperCase()}</span>
-            <span class="text-xs text-muted-foreground">{exchange}</span></Button
+            <span class="text-xs text-muted-foreground">{exchange}</span
+            ></Button
           >
         {/each}
       {/if}

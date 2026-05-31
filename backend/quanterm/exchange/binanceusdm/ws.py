@@ -10,8 +10,7 @@ from quanterm.websocket.base import BaseWS
 
 
 class BaseEnvelope(msgspec.Struct):
-    stream: str | None = None
-    id: int | None = None
+    stream: str | None
 
 
 _envelope_decoder = msgspec.json.Decoder(BaseEnvelope)
@@ -27,12 +26,16 @@ class BinanceWebsocket(BaseWS):
 
     @override
     async def connect(self) -> None:
-        self.websocket: websockets.ClientConnection | None = await websockets.connect(
-            self.uri
-        )
-        self._watch_task: asyncio.Task[None] | None = asyncio.create_task(
-            self._listen()
-        )
+        try:
+            self.websocket: (
+                websockets.ClientConnection | None
+            ) = await websockets.connect(self.uri)
+            self._watch_task: asyncio.Task[None] | None = asyncio.create_task(
+                self._listen()
+            )
+        except TimeoutError:
+            print("Your connection is slow as shit. Reconnecting...")
+            await self.connect()
 
     @override
     async def disconnect(self) -> None:

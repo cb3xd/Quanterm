@@ -1,9 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
-
 from msgspec import Struct
 from msgspec.json import Decoder
-
 from quanterm.types import KlineIntervals
 
 

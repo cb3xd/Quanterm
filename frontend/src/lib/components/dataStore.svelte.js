@@ -1,32 +1,58 @@
-let apiData = $state({
+let symbols = $state({
   data: {},
   loading: true,
   error: ""
 })
 
+let klines = $state({
+  data: [],
+  loading: true,
+  error: ""
+})
 
-export async function fetchApiData() {
+
+export async function fetchApiData(stateVar, dataEndpoint, params) {
   try {
-    apiData.loading = true;
+    stateVar.loading = true;
 
-    const response = await fetch('http://localhost:8000/api/all_exchange_symbols');
+    const response = await fetch(`http://localhost:8000/api/${dataEndpoint}?${params}`);
+
     console.log(response);
     const result = await response.json();
     console.log(result);
 
-    apiData.data = result;
-    apiData.loading = false;
+    stateVar.data = result;
+    stateVar.loading = false;
   }
   catch (err) {
-    apiData.error = "Failed to load symbols";
-    apiData.loading = false;
+    stateVar.error = "Failed to load symbols";
+    stateVar.loading = false;
     console.error(err)
   }
 }
 
+export async function fetchSymbols() {
+  fetchApiData(symbols, 'all_exchange_symbols');
+}
+
+export async function fetchKline(exchangeId, symbol, interval,) {
+  const params = new URLSearchParams({ symbol: symbol, interval: interval })
+  const endpoint = `kline/${exchangeId}`
+  fetchApiData(klines, endpoint, params);
+}
 
 export const symbolStore = {
-  get current() { return apiData.data },
-  get isLoading() { return apiData.loading },
-  get error() { return apiData.error }
+  get current() { return symbols.data },
+  get isLoading() { return symbols.loading },
+  get error() { return symbols.error },
+  get flattened() {
+    const result = [];
+    for (const [symbol, exchanges] of Object.entries(symbols.data)) {
+      const list = Array.isArray(exchanges) ? exchanges : [exchanges];
+      for (const exchange of list) {
+        result.push({ symbol, exchange });
+      }
+    }
+    return result;
+  }
 };

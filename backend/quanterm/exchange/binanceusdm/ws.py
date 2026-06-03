@@ -3,25 +3,26 @@ from typing import override
 import msgspec
 import websockets
 import json
-from quanterm.schemas import StreamDefinition, TradePacket
-from quanterm.exchange.binanceusdm.schemas import Packet
-from quanterm.exchange.binanceusdm.streams import BinanceStreamDefinitions
+from quanterm.exchange.binanceusdm.schemas import (
+    WS_DECODER,
+)
 from quanterm.websocket.base import BaseWS
 
 
-class BaseEnvelope(msgspec.Struct):
+class BinanceEnvelope(msgspec.Struct):
     stream: str | None
+    data: dict[str, str | int | bool]
 
 
-_envelope_decoder = msgspec.json.Decoder(BaseEnvelope)
+_envelope_decoder = msgspec.json.Decoder(BinanceEnvelope)
 
 
 class BinanceWebsocket(BaseWS):
     def __init__(self) -> None:
         super().__init__()
         self.uri: str = "wss://fstream.binance.com/market/stream"
-        self.streams: dict[str, StreamDefinition] = BinanceStreamDefinitions.streams
-        self.msg_decoder: msgspec.json.Decoder[Packet] = msgspec.json.Decoder(Packet)
+        self.msg_decoder = WS_DECODER
+        self.encoder = msgspec.json.Encoder()
         self.max_streams: int = 1024
 
     @override
@@ -76,17 +77,11 @@ class BinanceWebsocket(BaseWS):
     @override
     async def _on_message(self, raw: bytes):
         try:
-            envelope = _envelope_decoder.decode(raw)
-            if envelope.stream is None:
+            msg = _envelope_decoder.decode(raw)
+            if msg.stream is None:
                 return
-
-            packet = self.msg_decoder.decode(raw)
-
-            stream_type = packet.stream.split("@")[1]
-            stream = self.streams[stream_type]
-
-            data = stream.mapper(msgspec.convert(packet.data, stream.schema))
-
-            await self.event_bus.publish(data.event_id, data)
+            data = self.encoder.encode(msg.data)
+            final = self.msg_decoder.decode(data)
+            await self.event_bus.publish(final.event_id, final)
         except Exception as e:
-            print(e)
+            print("WS Error:", e)

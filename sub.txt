@@ -1,0 +1,1 @@
+{"method":"sub","params":{"symbol":"btcusdt","stream_type":"trade_stream","exchange_id":"binanceusdm"}}

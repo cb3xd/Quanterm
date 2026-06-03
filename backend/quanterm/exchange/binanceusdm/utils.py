@@ -1,10 +1,10 @@
-from quanterm.exchange.binanceusdm.streams import MarketStreams
+from quanterm.exchange.binanceusdm.streams import BinanceMarketStreams
 from quanterm.types import KlineIntervals, StreamTypes
 
 
 stream_type_map = {
-    StreamTypes.trade_stream: MarketStreams.TRADES,
-    StreamTypes.kline_stream: MarketStreams.KLINE,
+    StreamTypes.trade_stream: BinanceMarketStreams.TRADES,
+    StreamTypes.kline_stream: BinanceMarketStreams.KLINE,
 }
 
 

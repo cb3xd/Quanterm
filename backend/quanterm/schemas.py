@@ -4,6 +4,10 @@ from typing import Type, Callable
 from quanterm.types import KlineIntervals, StreamTypes
 
 
+class StreamEvent(Struct):
+    event_id: str
+
+
 class TradePacket(Struct, frozen=False):
     exchange_id: str
     symbol: str

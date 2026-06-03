@@ -1,3 +1,9 @@
+let tickerPriceChange = $state({
+  data: [],
+  loading: true,
+  error: ""
+})
+
 let symbols = $state({
   data: {},
   loading: true,
@@ -18,6 +24,29 @@ export async function fetchApiData(dataEndpoint, params) {
   return await response.json();
 }
 
+export async function fetchTickerPriceChange(symbol) {
+  tickerPriceChange.loading = true;
+  try {
+    const params = new URLSearchParams({ symbol: symbol });
+    const endpoint = `price_change/binanceusdm`;
+    const result = await fetchApiData(endpoint, params);
+
+    const index = tickerPriceChange.data.findIndex((item) => item.symbol === symbol);
+
+    if (index !== -1) {
+      tickerPriceChange.data[index] = { ...result, symbol };
+    } else {
+      tickerPriceChange.data.push({ ...result, symbol });
+    }
+
+    tickerPriceChange.error = "";
+  } catch (err) {
+    tickerPriceChange.error = err.message;
+    console.error(err);
+  } finally {
+    tickerPriceChange.loading = false;
+  }
+}
 export async function fetchSymbols() {
   symbols.loading = true;
   try {
@@ -74,4 +103,11 @@ export const klineStore = {
   get isLoading() { return klines.loading },
   get error() { return klines.error },
 
+}
+
+
+export const tickerPriceChangeStore = {
+  get current() { return tickerPriceChange.data },
+  get isLoading() { return tickerPriceChange.loading },
+  get error() { return tickerPriceChange.error },
 }

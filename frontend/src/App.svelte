@@ -13,7 +13,9 @@
   $effect(() => {
     fetchSymbols();
   });
-
+  import TickerCards from "$lib/components/ui/custom/TickerCards.svelte";
+  import Label from "$lib/components/ui/label/label.svelte";
+  import Separator from "$lib/components/ui/separator/separator.svelte";
   let searchInput = $state("");
   let filteredSymbols = $derived(
     symbolStore.flattened.filter(({ symbol }) =>
@@ -22,39 +24,51 @@
   );
 </script>
 
-<Dialog.Root>
-  <Dialog.Trigger class={buttonVariants({ variant: "outline" })}
-    >Coins</Dialog.Trigger
-  >
-  <Dialog.Content class="sm:max-w-md">
-    <Dialog.Header>
-      <Dialog.Title>Available Symbols</Dialog.Title>
-      <Dialog.Description>
-        Currently the only supported exchange is Binance USDM.
-      </Dialog.Description>
-    </Dialog.Header>
-    <Input type="symbolSearch" placeholder="BTCUSDT" bind:value={searchInput}
-    ></Input>
-    {#if searchInput == ""}
-      <p></p>
-    {:else}
-      <p>Results for: {searchInput}</p>
-    {/if}
-    <ScrollArea class="h-72 border">
-      {#if symbolStore.isLoading}
-        <Skeleton class="h-72" />
-      {:else}
-        {#each filteredSymbols as { symbol, exchange }}
-          <Button
-            variant="outline"
-            class="flex w-full justify-between"
-            onclick={() => fetchKline(exchange, symbol, "1m")}
-            ><span>{symbol.toUpperCase()}</span>
-            <span class="text-xs text-muted-foreground">{exchange}</span
-            ></Button
-          >
-        {/each}
-      {/if}
-    </ScrollArea>
-  </Dialog.Content>
-</Dialog.Root>
+<div class="min-h-screen">
+  <div class="flex flex-row min-w-screen gap-2">
+    <Label class="italic ">Quanterm</Label>
+    <Dialog.Root>
+      <Dialog.Trigger
+        class={`${buttonVariants({ variant: "outline" })} cursor-pointer`}
+      >
+        Symbols
+      </Dialog.Trigger>
+      <Dialog.Content class="sm:max-w-md">
+        <Dialog.Header>
+          <Dialog.Title>Available Symbols</Dialog.Title>
+          <Dialog.Description>
+            Currently the only supported exchange is Binance USDM.
+          </Dialog.Description>
+        </Dialog.Header>
+        <Input
+          type="symbolSearch"
+          placeholder="BTCUSDT"
+          bind:value={searchInput}
+        ></Input>
+        {#if searchInput == ""}
+          <p></p>
+        {:else}
+          <p>Results for: {searchInput}</p>
+        {/if}
+        <ScrollArea class="h-72 border">
+          {#if symbolStore.isLoading}
+            <Skeleton class="h-72" />
+          {:else}
+            {#each filteredSymbols as { symbol, exchange }}
+              <Button
+                variant="outline"
+                class="flex w-full justify-between cursor-pointer"
+                onclick={() => fetchKline(exchange, symbol, "1m")}
+                ><span>{symbol.toUpperCase()}</span>
+                <span class="text-xs text-muted-foreground">{exchange}</span
+                ></Button
+              >
+            {/each}
+          {/if}
+        </ScrollArea>
+      </Dialog.Content>
+    </Dialog.Root>
+  </div>
+  <Separator />
+  <TickerCards></TickerCards>
+</div>

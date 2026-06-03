@@ -74,7 +74,7 @@ class ExchangeInfo(msgspec.Struct, rename="camel"):
     timezone: str
 
 
-class Candle(msgspec.Struct, array_like=True):
+class Candle(msgspec.Struct, array_like=True, rename="camel"):
     open_time: int
     open_price: Decimal
     high_price: Decimal
@@ -88,11 +88,22 @@ class Candle(msgspec.Struct, array_like=True):
     taker_buy_quote_asset_volume: Decimal
 
 
+class TickerPriceChange(msgspec.Struct, rename="camel"):
+    symbol: str
+    price_change: str
+    price_change_percent: str
+    weighted_avg_price: str
+    last_price: str
+    volume: str
+    quote_volume: str
+
+
 class BinanceAPI(BaseAPI):
     def __init__(self) -> None:
         url = "https://fapi.binance.com/fapi/v1"
         kline_decoder = msgspec.json.Decoder(list[Candle])
         self.encoder = Encoder()
+        self.price_change_decoder = msgspec.json.Decoder(TickerPriceChange)
         super().__init__(url, kline_decoder)
 
     @override
@@ -127,3 +138,15 @@ class BinanceAPI(BaseAPI):
                 }
 
                 return kline_dataset
+
+    @override
+    async def fetch_price_change(self, symbol: str) -> msgspec.Struct:
+        params = {"symbol": symbol}
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{self.url}/ticker/24hr", params=params) as r:
+                r.raise_for_status()
+
+                raw_bytes = await r.read()
+                ticker_price_change = self.price_change_decoder.decode(raw_bytes)
+                return ticker_price_change

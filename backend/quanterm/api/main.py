@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from quanterm.api.routes.kline import kline_router
+from quanterm.api.routes.ticker_price_change import ticker_price_change_router
 from quanterm.api.routes.websocket import router as ws_router
 from quanterm.api.routes.symbols import router as symbols_router
 from quanterm.exchange.constants import ExchangeID
@@ -29,3 +30,4 @@ app.add_middleware(
 app.include_router(ws_router)
 app.include_router(symbols_router, prefix="/api")
 app.include_router(kline_router, prefix="/api")
+app.include_router(ticker_price_change_router, prefix="/api")

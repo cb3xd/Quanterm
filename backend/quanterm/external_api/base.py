@@ -22,3 +22,6 @@ class BaseAPI(ABC):
 
     @abstractmethod
     async def fetch_kline(self, symbol: str, interval: KlineIntervals) -> Struct: ...
+
+    @abstractmethod
+    async def fetch_price_change(self, symbol: str) -> Struct: ...

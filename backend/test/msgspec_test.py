@@ -18,6 +18,10 @@ class UniversalStreamEvent(msgspec.Struct, tag_field="e"):
 class AggTradeEvent(UniversalStreamEvent, tag="aggTrade"):
     symbol: str = msgspec.field(name="s")
     price: str = msgspec.field(name="p")
+    formatted: UniversalTradePacket
+
+    def __post_init__(self):
+        self.formatted = UniversalTradePacket(symbol=self.symbol, price=self.price)
 
 
 class DepthEvent(UniversalStreamEvent, tag="depthUpdate"):
@@ -43,6 +47,6 @@ print(depth)
 encoder = Encoder()
 
 print(encoder.encode(trade))
-universal_trade = UniversalTradePacket(symbol=trade.symbol, price=trade.price)
-print(universal_trade)
-print(encoder.encode(universal_trade))
+
+print(trade.formatted)
+print(encoder.encode(trade.formatted))

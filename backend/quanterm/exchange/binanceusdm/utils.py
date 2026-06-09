@@ -8,14 +8,16 @@ stream_type_map = {
 }
 
 
-def get_stream_id(
-    symbol: str, stream_type: StreamTypes, interval: KlineIntervals | None
-) -> str | None:
+def format_id(event_id: str) -> str:
+    parts = event_id.split(".")
+    symbol = parts[0].lower()
+    stream_type = StreamTypes(parts[1])
+    interval = None
     _stream_type = stream_type_map.get(stream_type)
     if _stream_type is None:
-        print("(utils.py) Invalid stream type")
-        return
-    if interval:
+        raise ValueError(f"Invalid stream type {stream_type}")
+    if parts.__len__() == 3:
+        interval = KlineIntervals(parts[2])
         return f"{symbol}@{_stream_type}{interval}"
     else:
         return f"{symbol}@{_stream_type}"

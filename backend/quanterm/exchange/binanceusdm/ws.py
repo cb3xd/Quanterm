@@ -5,13 +5,14 @@ import websockets
 import json
 from quanterm.exchange.binanceusdm.schemas import (
     WS_DECODER,
+    StreamRouterType,
 )
 from quanterm.websocket.base import BaseWS
 
 
 class BinanceEnvelope(msgspec.Struct):
     stream: str | None
-    data: dict[str, str | int | bool]
+    packet: StreamRouterType = msgspec.field(name="data")
 
 
 _envelope_decoder = msgspec.json.Decoder(BinanceEnvelope)
@@ -56,7 +57,7 @@ class BinanceWebsocket(BaseWS):
         print("WS Disconnected")
 
     @override
-    async def subscribe(self, stream_id: str):
+    async def subscribe(self, events: set[str]):
         if self.active_streams.__len__() == self.max_streams:
             print("Max streams reached")
             return
@@ -65,12 +66,10 @@ class BinanceWebsocket(BaseWS):
             print("Connect first.")
             return
 
-        if stream_id in self.active_streams:
-            print(f"[{stream_id}] Stream already exists!")
-            return
+        events = self.active_streams - events
 
-        self.active_streams.add(stream_id)
-        subscribe_message = {"method": "SUBSCRIBE", "params": [stream_id], "id": 1}
+        self.active_streams.union(events)
+        subscribe_message = {"method": "SUBSCRIBE", "params": events}
 
         await self.websocket.send(json.dumps(subscribe_message))
 
@@ -78,10 +77,11 @@ class BinanceWebsocket(BaseWS):
     async def _on_message(self, raw: bytes):
         try:
             msg = _envelope_decoder.decode(raw)
-            if msg.stream is None:
+            if msg.packet.data is None:
                 return
-            data = self.encoder.encode(msg.data)
-            final = self.msg_decoder.decode(data)
-            await self.event_bus.publish(final.event_id, final)
+            await self.event_bus.publish(msg.packet.data.event_id, msg.packet.data)
+        except msgspec.ValidationError:
+            print(raw)
+            pass
         except Exception as e:
             print("WS Error:", e)

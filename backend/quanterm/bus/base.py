@@ -3,7 +3,17 @@ from typing import Optional, TypeAlias, Callable, Any, Coroutine
 from collections import defaultdict
 from msgspec import Struct
 
+from quanterm.exchange.constants import ExchangeID
+from quanterm.types import KlineIntervals, StreamTypes
+
 EventHandler: TypeAlias = Callable[[Any], Coroutine[Any, Any, None]]
+
+
+class EventID(Struct):
+    symbol: str
+    exchange_id: ExchangeID
+    stream_type: StreamTypes
+    interval: KlineIntervals | None = None
 
 
 class Listener:
@@ -20,14 +30,14 @@ class Listener:
 
 class EventBus:
     def __init__(self) -> None:
-        self._listeners: defaultdict[str, list[EventHandler]] = defaultdict(list)
+        self._listeners: defaultdict[str, set[EventHandler]] = defaultdict(set)
         self._background_tasks: set[asyncio.Task] = set()
 
     def on(
         self, event: str, handler: Optional[EventHandler] = None
     ) -> Callable[[EventHandler], Listener] | Listener:
         def decorator(handler_function: EventHandler) -> Listener:
-            self._listeners[event].append(handler_function)
+            self._listeners[event].add(handler_function)
             return Listener(self, event, handler_function)
 
         if handler is None:
@@ -48,8 +58,8 @@ class EventBus:
             if not self._listeners[event]:
                 del self._listeners[event]
 
-    def get_listeners(self, event: str) -> list[EventHandler]:
-        return self._listeners[event].copy()
+    def get_listeners(self) -> dict[str, set[EventHandler]]:
+        return self._listeners.copy()
 
     async def _safe_execute(self, handler: EventHandler, message: Struct) -> None:
         try:

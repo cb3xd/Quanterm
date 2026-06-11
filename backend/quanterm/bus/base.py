@@ -3,17 +3,8 @@ from typing import Optional, TypeAlias, Callable, Any, Coroutine
 from collections import defaultdict
 from msgspec import Struct
 
-from quanterm.exchange.constants import ExchangeID
-from quanterm.types import KlineIntervals, StreamTypes
 
 EventHandler: TypeAlias = Callable[[Any], Coroutine[Any, Any, None]]
-
-
-class EventID(Struct):
-    symbol: str
-    exchange_id: ExchangeID
-    stream_type: StreamTypes
-    interval: KlineIntervals | None = None
 
 
 class Listener:

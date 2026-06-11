@@ -1,11 +1,15 @@
 from enum import StrEnum
 
+from quanterm.tcp.byte_mappings import register_byte_map
 
+
+@register_byte_map
 class StreamTypes(StrEnum):
     trade_stream = "trade_stream"
     kline_stream = "kline_stream"
 
 
+@register_byte_map
 class KlineIntervals(StrEnum):
     minute = "1m"
     minute_3 = "3m"

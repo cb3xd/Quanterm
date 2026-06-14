@@ -8,7 +8,7 @@ from quanterm.websocket.base import BaseWS
 
 class ExchangeManager:
     def __init__(self) -> None:
-        self._active_exchanges: dict[ExchangeID, Exchange] = {}
+        self._active_exchanges: dict[ExchangeID, Exchange] = exchange_registry
         self._websocket_instances: dict[ExchangeID, BaseWS] = {}
         self._event_bus = get_event_bus()
 
@@ -26,7 +26,7 @@ class ExchangeManager:
             if not exchange_class:
                 raise ValueError(f"Exchange {exchange_id} was never registered!")
 
-            self._active_exchanges[exchange_id] = exchange_class()
+            self._active_exchanges[exchange_id] = exchange_class
         return self._active_exchanges[exchange_id]
 
     async def connect_all_websockets(self):

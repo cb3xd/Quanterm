@@ -6,7 +6,7 @@ def generate_event_id(
     exchange_id: ExchangeID, symbol: str, event_type: StreamTypes, extra: str | None
 ) -> str:
 
-    event_id = f"{exchange_id}.{symbol}.{event_type}".lower()
+    event_id = f"{exchange_id}.{event_type}.{symbol}".lower()
 
     if extra:
         event_id += f".{extra}"

@@ -1,13 +1,7 @@
 from msgspec import Struct
 
-from quanterm.types import KlineIntervals, StreamTypes
 
-
-class StreamEvent(Struct):
-    event_id: str
-
-
-class TradePacket(Struct, frozen=False):
+class TradePacket(Struct):
     exchange_id: str
     symbol: str
     price: str
@@ -17,7 +11,7 @@ class TradePacket(Struct, frozen=False):
     event_id: str
 
 
-class KlinePacket(Struct, frozen=False):
+class KlinePacket(Struct):
     exchange_id: str
     open_time: int
     close_time: int
@@ -33,10 +27,3 @@ class KlinePacket(Struct, frozen=False):
     taker_buy_base_volume: str
     taker_buy_quote_volume: str
     event_id: str
-
-
-class FastApiSubscribePacket(Struct, omit_defaults=True):
-    event_id: str
-    symbol: str
-    stream_type: StreamTypes
-    interval: KlineIntervals | None = None

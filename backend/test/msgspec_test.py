@@ -1,52 +1,64 @@
 import msgspec
-from typing import Union
-
-from msgspec.json import Encoder
+from typing import Callable, Union
 
 
-class UniversalTradePacket(msgspec.Struct):
+class TradePacket(msgspec.Struct):
     symbol: str
     price: str
+    quantity: str
+    time: int
 
 
-# 1. Base struct defines the shared attributes and the JSON routing key (tag_field)
-class UniversalStreamEvent(msgspec.Struct, tag_field="e"):
+class OrderbookPacket(msgspec.Struct):
     symbol: str
+    bids: list
+    asks: list
 
 
 # 2. Subclasses define the expected routing value (tag) and map the divergent JSON keys
-class AggTradeEvent(UniversalStreamEvent, tag="aggTrade"):
+class ABCTradeEvent(TradePacket, tag_field="e", tag="aggTrade"):
     symbol: str = msgspec.field(name="s")
     price: str = msgspec.field(name="p")
-    formatted: UniversalTradePacket
-
-    def __post_init__(self):
-        self.formatted = UniversalTradePacket(symbol=self.symbol, price=self.price)
+    quantity: str = msgspec.field(name="q")
+    time: int = msgspec.field(name="t")
 
 
-class DepthEvent(UniversalStreamEvent, tag="depthUpdate"):
+class ABCDepthEvent(OrderbookPacket, tag_field="e", tag="depthUpdate"):
     symbol: str = msgspec.field(name="s")
     bids: list = msgspec.field(name="b")
+    asks: list = msgspec.field(name="a")
 
 
 # 3. Use standard Python Union (or AggTradeEvent | DepthEvent in 3.10+)
-StreamRouterType = Union[AggTradeEvent, DepthEvent]
+StreamRouterType = Union[ABCTradeEvent, ABCDepthEvent]
 
 # 4. Pass the union directly to the Decoder
 decoder = msgspec.json.Decoder(StreamRouterType)
 
 # Execution
-payload_trade = b'{"e":"aggTrade","s":"BTCUSDT","p":"60000"}'
-payload_depth = b'{"e":"depthUpdate","s":"ETHUSDT","b":[["3000","1"]]}'
+payload_trade = b'{"e": "aggTrade", "s": "BTCUSDT", "p": "60000", "q": "10", "t": 100}'
+payload_depth = b'{"e":"depthUpdate","s":"ETHUSDT","b":[["3000","1"]], "a":[]}'
 
-trade = decoder.decode(payload_trade)
-depth = decoder.decode(payload_depth)
-print(trade)
-print(depth)
 
-encoder = Encoder()
+def map_trade(packet: ABCTradeEvent):
+    return TradePacket(
+        symbol=packet.symbol,
+        price=packet.price,
+        quantity=packet.quantity,
+        time=packet.time,
+    )
 
-print(encoder.encode(trade))
 
-print(trade.formatted)
-print(encoder.encode(trade.formatted))
+def map_depth(packet: ABCDepthEvent):
+    return OrderbookPacket(symbol=packet.symbol, bids=packet.bids, asks=packet.asks)
+
+
+hash_map: dict[type[msgspec.Struct], Callable] = {
+    ABCTradeEvent: map_trade,
+    ABCDepthEvent: map_depth,
+}
+
+abc_trade_packet = decoder.decode(payload_trade)
+trade_packet: Callable = hash_map.get(type(abc_trade_packet))(abc_trade_packet)
+print(trade_packet)
+print(msgspec.json.encode(trade_packet))

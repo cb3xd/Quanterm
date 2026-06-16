@@ -4,7 +4,7 @@ import msgspec
 import websockets
 import json
 from quanterm.exchange.binanceusdm.schemas import (
-    WS_DECODER,
+    PACKET_MAPPERS,
     StreamRouterType,
 )
 from quanterm.websocket.base import BaseWS
@@ -22,7 +22,6 @@ class BinanceWebsocket(BaseWS):
     def __init__(self) -> None:
         super().__init__()
         self.uri: str = "wss://fstream.binance.com/market/stream"
-        self.msg_decoder = WS_DECODER
         self.encoder = msgspec.json.Encoder()
         self.max_streams: int = 1024
 
@@ -66,20 +65,20 @@ class BinanceWebsocket(BaseWS):
             print("Connect first.")
             return
 
-        events = self.active_streams - events
+        events = events.difference(self.active_streams)
 
         self.active_streams.union(events)
-        subscribe_message = {"method": "SUBSCRIBE", "params": events}
-
+        subscribe_message = {"method": "SUBSCRIBE", "params": list(events)}
         await self.websocket.send(json.dumps(subscribe_message))
 
     @override
     async def _on_message(self, raw: bytes):
         try:
             msg = _envelope_decoder.decode(raw)
-            if msg.packet.data is None:
+            if msg.packet is None:
                 return
-            await self.event_bus.publish(msg.packet.data.event_id, msg.packet.data)
+            formatted_data = PACKET_MAPPERS.get(type(msg.packet))(msg.packet)
+            await self.event_bus.publish(formatted_data.event_id, formatted_data)
         except msgspec.ValidationError:
             print(raw)
             pass

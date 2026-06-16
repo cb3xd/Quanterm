@@ -1,15 +1,22 @@
 import asyncio
 
-import websockets
-import msgspec
+from quanterm.bus.base import get_event_bus
+from quanterm.exchange.binanceusdm.ws import BinanceWebsocket
 
 
-async def test():
-    async with websockets.connect("ws://localhost:8000/ws") as ws:
-        encoder = msgspec.json.Encoder()
-
-        msg = encoder.encode({"method": "sub", "params": []})
-        await ws.send(msg)
+async def foo(data):
+    print(data)
 
 
-asyncio.run(test())
+async def main():
+    ws = BinanceWebsocket()
+    await ws.connect()
+    await ws.subscribe(set(["btcusdt@aggTrade", "ethusdt@aggTrade"]))
+
+    event_bus = get_event_bus()
+    event_bus.on("binanceusdm.trade_stream.btcusdt", foo)
+    await asyncio.sleep(100)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

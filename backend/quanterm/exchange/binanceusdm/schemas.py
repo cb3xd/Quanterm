@@ -1,15 +1,13 @@
+from typing import Callable
+
 from msgspec import Struct, field, json
 from quanterm.bus.utils import generate_event_id
 from quanterm.exchange.constants import ExchangeID
-from quanterm.schemas import KlinePacket, StreamEvent, TradePacket
+from quanterm.schemas import KlinePacket, TradePacket
 from quanterm.types import KlineIntervals, StreamTypes
 
 
-class BinanceStreamEvent(StreamEvent, tag_field="e"):
-    event_id: str
-
-
-class BinanceTradePacket(BinanceStreamEvent, tag="aggTrade", kw_only=True):
+class BinanceTradePacket(Struct, tag_field="e", tag="aggTrade", kw_only=True):
     symbol: str = field(name="s")
     event_time: int = field(name="E")
     price: str = field(name="p")
@@ -17,22 +15,6 @@ class BinanceTradePacket(BinanceStreamEvent, tag="aggTrade", kw_only=True):
     is_buy: bool = field(name="m")
     exchange_id: ExchangeID = ExchangeID.binanceusdm
     stream_type: StreamTypes = StreamTypes.trade_stream
-    event_id: str = ""
-    data: TradePacket | None = None
-
-    def __post_init__(self):
-        self.event_id = generate_event_id(
-            ExchangeID.binanceusdm, self.symbol, self.stream_type, extra=None
-        )
-        self.data = TradePacket(
-            exchange_id=ExchangeID.binanceusdm,
-            symbol=self.symbol,
-            price=self.price,
-            size=self.size,
-            event_time=self.event_time,
-            event_id=self.event_id,
-            is_buy=self.is_buy,
-        )
 
 
 class BinanceKlineData(Struct):
@@ -50,40 +32,69 @@ class BinanceKlineData(Struct):
     taker_buy_quote_asset_volume: str = field(name="Q")
 
 
-class BinanceKlinePacket(BinanceStreamEvent, tag="kline", kw_only=True):
+class BinanceKlinePacket(Struct, tag_field="e", tag="kline", kw_only=True):
     symbol: str = field(name="s")
     event_time: int = field(name="E")
     kline: BinanceKlineData = field(name="k")
     stream_type: StreamTypes = StreamTypes.kline_stream
-    event_id: str = ""
-    data: KlinePacket | None = None
 
-    def __post_init__(self):
-        self.event_id = generate_event_id(
-            exchange_id=ExchangeID.binanceusdm,
-            symbol=self.symbol,
-            event_type=self.stream_type,
-            extra=self.kline.interval,
-        )
-        self.data = KlinePacket(
-            exchange_id=ExchangeID.binanceusdm,
-            open_time=self.kline.kline_start_time,
-            close_time=self.kline.kline_close_time,
-            symbol=self.symbol,
-            interval=self.kline.interval,
-            open_price=self.kline.open_price,
-            high_price=self.kline.high_price,
-            low_price=self.kline.low_price,
-            close_price=self.kline.close_price,
-            volume=self.kline.base_asset_volume,
-            trade_count=self.kline.trade_count,
-            is_closed=self.kline.is_closed,
-            taker_buy_base_volume=self.kline.taker_buy_base_asset_volume,
-            taker_buy_quote_volume=self.kline.taker_buy_quote_asset_volume,
-            event_id=self.event_id,
-        )
+
+class BinanceMarketPriceData(Struct):
+    event_time: int = field(name="E")
+    symbol: str = field(name="s")
+    mark_price: str = field(name="p")
+    index_price: str = field(name="i")
+    funding_rate: str = field(name="r")
+    next_funding_time: int = field(name="T")
+
+
+# class BinanceMarketPricePacket(Struct, tag_field="e")
+
+
+def map_trade(packet: BinanceTradePacket):
+    return TradePacket(
+        symbol=packet.symbol,
+        exchange_id=ExchangeID.binanceusdm,
+        price=packet.price,
+        size=packet.size,
+        event_time=packet.event_time,
+        is_buy=packet.is_buy,
+        event_id=generate_event_id(
+            ExchangeID.binanceusdm, packet.symbol.lower(), StreamTypes.trade_stream
+        ),
+    )
+
+
+def map_kline(packet: BinanceKlinePacket):
+    return KlinePacket(
+        exchange_id=ExchangeID.binanceusdm,
+        symbol=packet.symbol,
+        open_time=packet.kline.kline_start_time,
+        close_time=packet.kline.kline_close_time,
+        interval=packet.kline.interval,
+        open_price=packet.kline.open_price,
+        high_price=packet.kline.high_price,
+        low_price=packet.kline.low_price,
+        close_price=packet.kline.close_price,
+        volume=packet.kline.base_asset_volume,
+        trade_count=packet.kline.trade_count,
+        is_closed=packet.kline.is_closed,
+        taker_buy_base_volume=packet.kline.taker_buy_base_asset_volume,
+        taker_buy_quote_volume=packet.kline.taker_buy_quote_asset_volume,
+        event_id=generate_event_id(
+            ExchangeID.binanceusdm,
+            packet.symbol.lower(),
+            StreamTypes.kline_stream,
+            extra=packet.kline.interval,
+        ),
+    )
 
 
 StreamRouterType = BinanceTradePacket | BinanceKlinePacket
 
 WS_DECODER = json.Decoder(StreamRouterType)
+
+PACKET_MAPPERS: dict[type[Struct], Callable] = {
+    BinanceTradePacket: map_trade,
+    BinanceKlinePacket: map_kline,
+}

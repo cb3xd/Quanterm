@@ -4,6 +4,8 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from msgspec import Struct, json
 
 from quanterm.exchange.constants import ExchangeID
+from quanterm.exchange.exchange_manager import manager
+from quanterm.types import KlineIntervals, StreamTypes
 
 router = APIRouter()
 
@@ -14,20 +16,18 @@ class FapiMethods(StrEnum):
     LIST_EVENTS = "list_events"
 
 
-class Message(Struct, tag_field="method"):
-    pass
+class Subscribe(Struct, tag_field="method", tag=str(FapiMethods.SUBSCRIBE)):
+    events: set[str]
+    exchange: ExchangeID
 
 
-class Subscribe(Message, tag=str(FapiMethods.SUBSCRIBE)):
-    params: set[str]
+class Unsubscribe(Struct, tag_field="method", tag=str(FapiMethods.UNSUBSCRIBE)):
+    streams: list[str]
+    exchange: ExchangeID
 
 
-class Unsubscribe(Message, tag=str(FapiMethods.UNSUBSCRIBE)):
-    params: set[str]
-
-
-class ListEvents(Message, tag=str(FapiMethods.LIST_EVENTS)):
-    params: ExchangeID
+class ListEvents(Struct, tag_field="method", tag=str(FapiMethods.LIST_EVENTS)):
+    exchange: ExchangeID
 
 
 _msg_types = Subscribe | Unsubscribe | ListEvents
@@ -39,7 +39,10 @@ async def websocket_loop(websocket: WebSocket):
         try:
             data = await websocket.receive_bytes()
             message = _msg_decoder.decode(data)
-            print(message)
+            events = message.events
+            exchange = manager.get_exchange(message.exchange)
+
+            await exchange.ws.subscribe(events)
         except WebSocketDisconnect:
             print("Client disconnected cleanly.")
             break

@@ -7,6 +7,7 @@ from quanterm.exchange.binanceusdm.schemas import (
     PACKET_MAPPERS,
     StreamRouterType,
 )
+from quanterm.exchange.binanceusdm.utils import format_id
 from quanterm.websocket.base import BaseWS
 
 
@@ -57,6 +58,7 @@ class BinanceWebsocket(BaseWS):
 
     @override
     async def subscribe(self, events: set[str]):
+
         if self.active_streams.__len__() == self.max_streams:
             print("Max streams reached")
             return
@@ -68,7 +70,15 @@ class BinanceWebsocket(BaseWS):
         events = events.difference(self.active_streams)
 
         self.active_streams.union(events)
-        subscribe_message = {"method": "SUBSCRIBE", "params": list(events)}
+        formatted_events: set[str] = set()
+        for event in events:
+            formatted_events.add(format_id(event))
+        print(formatted_events)
+        subscribe_message = {
+            "method": "SUBSCRIBE",
+            "params": list(formatted_events),
+        }
+        print(subscribe_message)
         await self.websocket.send(json.dumps(subscribe_message))
 
     @override
@@ -77,7 +87,11 @@ class BinanceWebsocket(BaseWS):
             msg = _envelope_decoder.decode(raw)
             if msg.packet is None:
                 return
-            formatted_data = PACKET_MAPPERS.get(type(msg.packet))(msg.packet)
+            formatted_data = PACKET_MAPPERS.get(type(msg.packet))
+            if formatted_data is None:
+                return
+            formatted_data = formatted_data(msg.packet)
+            print(formatted_data)
             await self.event_bus.publish(formatted_data.event_id, formatted_data)
         except msgspec.ValidationError:
             print(raw)

@@ -10,8 +10,8 @@ stream_type_map = {
 
 def format_id(event_id: str) -> str:
     parts = event_id.split(".")
-    symbol = parts[0].lower()
-    stream_type = StreamTypes(parts[1])
+    symbol = parts[1].lower()
+    stream_type = StreamTypes(parts[0])
     interval = None
     _stream_type = stream_type_map.get(stream_type)
     if _stream_type is None:
@@ -20,4 +20,6 @@ def format_id(event_id: str) -> str:
         interval = KlineIntervals(parts[2])
         return f"{symbol}@{_stream_type}{interval}"
     else:
+        event = f"{symbol}@{_stream_type}"
+        print(event)
         return f"{symbol}@{_stream_type}"

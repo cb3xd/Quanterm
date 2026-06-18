@@ -1,7 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from quanterm.exchange.constants import ExchangeID
 from quanterm.exchange.exchange_manager import manager
 from quanterm.fapi.routes.market.websocket import router as websocket_router
 import tracemalloc

@@ -21,5 +21,4 @@ def format_id(event_id: str) -> str:
         return f"{symbol}@{_stream_type}{interval}"
     else:
         event = f"{symbol}@{_stream_type}"
-        print(event)
-        return f"{symbol}@{_stream_type}"
+        return event

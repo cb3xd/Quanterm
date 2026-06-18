@@ -69,16 +69,16 @@ class BinanceWebsocket(BaseWS):
 
         events = events.difference(self.active_streams)
 
-        self.active_streams.union(events)
+        self.active_streams.update(events)
         formatted_events: set[str] = set()
         for event in events:
             formatted_events.add(format_id(event))
-        print(formatted_events)
+        if formatted_events.__len__() <= 0:
+            return
         subscribe_message = {
             "method": "SUBSCRIBE",
             "params": list(formatted_events),
         }
-        print(subscribe_message)
         await self.websocket.send(json.dumps(subscribe_message))
 
     @override
@@ -91,10 +91,8 @@ class BinanceWebsocket(BaseWS):
             if formatted_data is None:
                 return
             formatted_data = formatted_data(msg.packet)
-            print(formatted_data)
             await self.event_bus.publish(formatted_data.event_id, formatted_data)
         except msgspec.ValidationError:
-            print(raw)
             pass
         except Exception as e:
             print("WS Error:", e)

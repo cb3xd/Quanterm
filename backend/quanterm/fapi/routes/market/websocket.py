@@ -3,9 +3,9 @@ from enum import StrEnum
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from msgspec import Struct, json
 
+from quanterm.bus.base import get_event_bus
 from quanterm.exchange.constants import ExchangeID
 from quanterm.exchange.exchange_manager import manager
-from quanterm.types import KlineIntervals, StreamTypes
 
 router = APIRouter()
 
@@ -22,7 +22,7 @@ class Subscribe(Struct, tag_field="method", tag=str(FapiMethods.SUBSCRIBE)):
 
 
 class Unsubscribe(Struct, tag_field="method", tag=str(FapiMethods.UNSUBSCRIBE)):
-    streams: list[str]
+    events: set[str]
     exchange: ExchangeID
 
 
@@ -32,6 +32,8 @@ class ListEvents(Struct, tag_field="method", tag=str(FapiMethods.LIST_EVENTS)):
 
 _msg_types = Subscribe | Unsubscribe | ListEvents
 _msg_decoder = json.Decoder(_msg_types)
+_msg_encoder = json.Encoder()
+_event_bus = get_event_bus()
 
 
 async def websocket_loop(websocket: WebSocket):
@@ -39,10 +41,26 @@ async def websocket_loop(websocket: WebSocket):
         try:
             data = await websocket.receive_bytes()
             message = _msg_decoder.decode(data)
-            events = message.events
             exchange = manager.get_exchange(message.exchange)
+            if type(message) is ListEvents:
+                # exchange.ws.active_streams returns a set
+                continue
+            if type(message) is Unsubscribe:
+                continue
+            events = message.events
+
+            event_ids = set(
+                map(lambda event_id: message.exchange + "." + event_id, events)
+            )
+
+            async def send_msg(packet: Struct):
+                await websocket.send_bytes(_msg_encoder.encode(packet))
+
+            for event_id in event_ids:
+                _event_bus.on(event_id, send_msg)
 
             await exchange.ws.subscribe(events)
+
         except WebSocketDisconnect:
             print("Client disconnected cleanly.")
             break

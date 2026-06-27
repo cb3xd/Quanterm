@@ -1,11 +1,8 @@
 import asyncio
 import collections
 from enum import StrEnum
-from typing import Any
-
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket
 from msgspec import Struct, json
-
 from quanterm.bus.base import get_event_bus
 from quanterm.exchange.constants import ExchangeID
 from quanterm.exchange.exchange_manager import manager

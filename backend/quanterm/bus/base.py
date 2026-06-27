@@ -40,6 +40,11 @@ class EventBus:
 
     async def publish(self, event: str, message: Struct) -> None:
         listeners = self._listeners.get(event, [])
+        if not listeners:
+            return
+        if listeners.__len__() == 1:
+            await self._safe_execute(next(iter(listeners)), message)
+            return
         for listener in listeners:
             task = asyncio.create_task(self._safe_execute(listener, message))
             self._background_tasks.add(task)
@@ -69,7 +74,6 @@ class EventBus:
             await handler(message)
         except Exception as e:
             print("[71] Event Bus base.py: ", e)
-            self.unregister_all(handler)
 
 
 _event_bus_instance = EventBus()

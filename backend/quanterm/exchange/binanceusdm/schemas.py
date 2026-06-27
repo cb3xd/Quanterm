@@ -39,18 +39,6 @@ class BinanceKlinePacket(Struct, tag_field="e", tag="kline", kw_only=True):
     stream_type: StreamTypes = StreamTypes.kline_stream
 
 
-class BinanceMarketPriceData(Struct):
-    event_time: int = field(name="E")
-    symbol: str = field(name="s")
-    mark_price: str = field(name="p")
-    index_price: str = field(name="i")
-    funding_rate: str = field(name="r")
-    next_funding_time: int = field(name="T")
-
-
-# class BinanceMarketPricePacket(Struct, tag_field="e")
-
-
 def map_trade(packet: BinanceTradePacket):
     return TradePacket(
         symbol=packet.symbol,

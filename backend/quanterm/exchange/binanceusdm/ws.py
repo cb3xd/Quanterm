@@ -97,7 +97,9 @@ class BinanceWebsocket(BaseWS):
         try:
             if raw.startswith(b'{"result"}'):
                 return
-            msg = _envelope_decoder.decode(raw)
+            msg = await asyncio.get_event_loop().run_in_executor(
+                None, _envelope_decoder.decode, raw
+            )
             if msg.packet is None:
                 return
             formatted_data = PACKET_MAPPERS.get(type(msg.packet))

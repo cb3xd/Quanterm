@@ -42,13 +42,11 @@ class EventBus:
         listeners = self._listeners.get(event, [])
         if not listeners:
             return
-        if listeners.__len__() == 1:
-            await self._safe_execute(next(iter(listeners)), message)
-            return
         for listener in listeners:
-            task = asyncio.create_task(self._safe_execute(listener, message))
-            self._background_tasks.add(task)
-            task.add_done_callback(self._background_tasks.discard)
+            try:
+                await listener(message)
+            except Exception:
+                pass
 
     def remove_listener(self, event: str, handler: EventHandler) -> None:
         if event in self._listeners:
@@ -68,12 +66,6 @@ class EventBus:
 
     def get_listeners(self) -> dict[str, set[EventHandler]]:
         return self._listeners.copy()
-
-    async def _safe_execute(self, handler: EventHandler, message: Struct) -> None:
-        try:
-            await handler(message)
-        except Exception as e:
-            print("[71] Event Bus base.py: ", e)
 
 
 _event_bus_instance = EventBus()

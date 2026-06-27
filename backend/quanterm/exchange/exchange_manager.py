@@ -37,5 +37,10 @@ class ExchangeManager:
         ]
         await asyncio.gather(*tasks)
 
+    async def close_all(self):
+        await asyncio.gather(
+            *[exchange.close() for exchange in self.active_exchanges.values()]
+        )
+
 
 manager = ExchangeManager()

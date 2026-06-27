@@ -26,6 +26,7 @@ async def lifespan(app: FastAPI):
     await manager.connect_all_websockets()
     asyncio.create_task(monitor())
     yield
+    await manager.close_all()
     tracemalloc.stop()
 
 

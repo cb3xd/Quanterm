@@ -10,3 +10,6 @@ class Exchange(ABC):
 
     async def connect_websocket(self):
         await self.ws.connect()
+
+    async def close(self):
+        await self.api.close()

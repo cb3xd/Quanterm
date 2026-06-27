@@ -1,7 +1,10 @@
 import asyncio
+import logging
 from abc import ABC, abstractmethod
 from websockets import ClientConnection, ConnectionClosed
 from quanterm.bus.base import EventBus, get_event_bus
+
+logger = logging.getLogger("quanterm.ws")
 
 
 class BaseWS(ABC):
@@ -33,5 +36,9 @@ class BaseWS(ABC):
             try:
                 msg = await self.websocket.recv(decode=False)
                 await self._on_message(msg)
-            except ConnectionClosed:
+            except ConnectionClosed as e:
+                code = e.rcvd.code if e.rcvd else e.sent.code if e.sent else 1006
+                reason = e.rcvd.reason if e.rcvd else e.sent.reason if e.sent else "unknown"
+                logger.warning("WS closed %s: %s %s", self.uri, code, reason)
                 await self.disconnect()
+                return

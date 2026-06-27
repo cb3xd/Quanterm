@@ -104,7 +104,17 @@ class BinanceAPI(BaseAPI):
         kline_decoder = msgspec.json.Decoder(list[Candle])
         self.encoder = Encoder()
         self.price_change_decoder = msgspec.json.Decoder(TickerPriceChange)
+        self._session: aiohttp.ClientSession | None = None
         super().__init__(url, kline_decoder)
+
+    async def _get_session(self) -> aiohttp.ClientSession:
+        if self._session is None or self._session.closed:
+            self._session = aiohttp.ClientSession()
+        return self._session
+
+    async def close(self) -> None:
+        if self._session and not self._session.closed:
+            await self._session.close()
 
     @override
     async def fetch_symbols(self) -> set[str]:
@@ -114,39 +124,39 @@ class BinanceAPI(BaseAPI):
 
     @override
     async def fetch_exchange_info(self):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(f"{self.url}/exchangeInfo") as r:
-                r.raise_for_status()
-                raw_bytes = await r.read()
-                data = msgspec.json.decode(raw_bytes, type=ExchangeInfo)
-                return data
+        session = await self._get_session()
+        async with session.get(f"{self.url}/exchangeInfo") as r:
+            r.raise_for_status()
+            raw_bytes = await r.read()
+            data = msgspec.json.decode(raw_bytes, type=ExchangeInfo)
+            return data
 
     @override
     async def fetch_kline(self, symbol: str, interval: KlineIntervals):
         params = {"symbol": symbol.upper(), "interval": interval}
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(f"{self.url}/klines", params=params) as r:
-                r.raise_for_status()
+        session = await self._get_session()
+        async with session.get(f"{self.url}/klines", params=params) as r:
+            r.raise_for_status()
 
-                raw_bytes = await r.read()
-                klines = self.kline_decoder.decode(raw_bytes)
-                kline_dataset = {
-                    "symbol": symbol,
-                    "interval": interval,
-                    "candles": klines,
-                }
+            raw_bytes = await r.read()
+            klines = self.kline_decoder.decode(raw_bytes)
+            kline_dataset = {
+                "symbol": symbol,
+                "interval": interval,
+                "candles": klines,
+            }
 
-                return kline_dataset
+            return kline_dataset
 
     @override
     async def fetch_price_change(self, symbol: str) -> msgspec.Struct:
         params = {"symbol": symbol}
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(f"{self.url}/ticker/24hr", params=params) as r:
-                r.raise_for_status()
+        session = await self._get_session()
+        async with session.get(f"{self.url}/ticker/24hr", params=params) as r:
+            r.raise_for_status()
 
-                raw_bytes = await r.read()
-                ticker_price_change = self.price_change_decoder.decode(raw_bytes)
-                return ticker_price_change
+            raw_bytes = await r.read()
+            ticker_price_change = self.price_change_decoder.decode(raw_bytes)
+            return ticker_price_change

@@ -33,7 +33,7 @@ def build_subscribe_packets(
 
     packets = []
     for exchange, symbols in exchange_symbols.items():
-        events = [f"trade_stream.{s}" for s in symbols]
+        events = [f"kline_stream.{s}.1m" for s in symbols]
         # Chunk into batches
         for i in range(0, len(events), batch_size):
             chunk = events[i : i + batch_size]

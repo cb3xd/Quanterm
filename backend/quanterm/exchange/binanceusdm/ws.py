@@ -1,4 +1,6 @@
 import asyncio
+import logging
+
 from typing import override
 import msgspec
 import websockets
@@ -18,6 +20,8 @@ class BinanceEnvelope(msgspec.Struct):
 
 _envelope_decoder = msgspec.json.Decoder(BinanceEnvelope)
 
+logging.getLogger("websockets").setLevel(logging.CRITICAL)
+
 
 class BinanceWebsocket(BaseWS):
     def __init__(self) -> None:
@@ -25,18 +29,24 @@ class BinanceWebsocket(BaseWS):
         self.uri: str = "wss://fstream.binance.com/market/stream"
         self.encoder = msgspec.json.Encoder()
         self.max_streams: int = 1024
+        self._reconnect_delay: float = 1.0
+        self._max_delay: float = 60.0
 
     @override
     async def connect(self) -> None:
+        delay = self._reconnect_delay
         try:
             self.websocket: (
                 websockets.ClientConnection | None
-            ) = await websockets.connect(self.uri)
+            ) = await websockets.connect(self.uri, ping_interval=20, ping_timeout=10)
+            self._reconnect_delay = 1.0
             self._watch_task: asyncio.Task[None] | None = asyncio.create_task(
                 self._listen()
             )
-        except TimeoutError:
-            print("Your connection is slow as shit. Reconnecting...")
+        except (TimeoutError, OSError, websockets.WebSocketException) as e:
+            print(f"WS reconnect in {delay}s: {e}")
+            await asyncio.sleep(delay)
+            self._reconnect_delay = min(delay * 2, self._max_delay)
             await self.connect()
 
     @override
@@ -54,7 +64,8 @@ class BinanceWebsocket(BaseWS):
             await self.websocket.close()
             self.websocket = None
 
-        print("WS Disconnected")
+        print("WS Disconnected, attempting reconnect")
+        await self.connect()
 
     @override
     async def subscribe(self, events: set[str]):
@@ -84,6 +95,8 @@ class BinanceWebsocket(BaseWS):
     @override
     async def _on_message(self, raw: bytes):
         try:
+            if raw.startswith(b'{"result"}'):
+                return
             msg = _envelope_decoder.decode(raw)
             if msg.packet is None:
                 return

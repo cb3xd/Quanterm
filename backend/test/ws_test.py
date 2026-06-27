@@ -1,38 +1,86 @@
 import asyncio
 
-import websockets
 import msgspec
+import websockets
+
+import httpx
 
 encoder = msgspec.json.Encoder()
+FAPI_URL = "http://localhost:8000"
+WS_URL = "ws://localhost:8000/ws"
+BATCH_SIZE = 100
 
 
-def sub():
-    return encoder.encode(
-        {
-            "method": "sub",
-            "events": [
-                "trade_stream.btcusdt",
-                "trade_stream.xrpusdt",
-                "trade_stream.solusdt",
-                "trade_stream.ethusdt",
-            ],
-            "exchange": "binanceusdm",
-        }
-    )
+def fetch_symbols() -> dict[str, list[str]]:
+    """Fetch {symbol: [exchange_ids]} from the API."""
+    resp = httpx.get(f"{FAPI_URL}/api/all_exchange_symbols")
+    resp.raise_for_status()
+    return resp.json()
 
 
-def list_events():
-    return encoder.encode({"method": "list_events", "exchange": "binanceusdm"})
+def build_subscribe_packets(
+    symbols_by_exchange: dict[str, list[str]],
+    batch_size: int = BATCH_SIZE,
+) -> list[bytes]:
+    """
+    Build subscribe packets per exchange, chunked into batches.
+    Binance limits ~200 params per SUBSCRIBE message, so we default to 100.
+    """
+    exchange_symbols: dict[str, list[str]] = {}
+    for symbol, exchanges in symbols_by_exchange.items():
+        for exchange in exchanges:
+            exchange_symbols.setdefault(exchange, []).append(symbol)
+
+    packets = []
+    for exchange, symbols in exchange_symbols.items():
+        events = [f"trade_stream.{s}" for s in symbols]
+        # Chunk into batches
+        for i in range(0, len(events), batch_size):
+            chunk = events[i : i + batch_size]
+            packet = encoder.encode(
+                {
+                    "method": "sub",
+                    "events": chunk,
+                    "exchange": exchange,
+                }
+            )
+            packets.append(packet)
+    return packets
 
 
 async def test():
-    while True:
-        async with websockets.connect("ws://localhost:8000/ws") as ws:
-            await ws.send(sub())
+    symbols = fetch_symbols()
+    symbols = dict(list(symbols.items())[: len(symbols)])
+    total = sum(len(v) for v in symbols.values())
+    print(f"Fetched {len(symbols)} unique symbols ({total} symbol-exchange pairs)")
 
-            await ws.send(list_events())
+    packets = build_subscribe_packets(symbols)
+    print(f"Built {len(packets)} subscribe packet(s) (batch size: {BATCH_SIZE})")
+    for i, pkt in enumerate(packets):
+        decoded = msgspec.json.decode(pkt)
+        print(
+            f"  Packet {i}: exchange={decoded['exchange']}, "
+            f"events={len(decoded['events'])}"
+        )
+
+    async with websockets.connect(
+        WS_URL,
+        ping_interval=20,
+        ping_timeout=10,
+        close_timeout=5,
+    ) as ws:
+        for pkt in packets:
+            await ws.send(pkt)
+        print("\nSubscribed. Listening for events...\n")
+        try:
             while True:
-                print(await ws.recv())
+                msg = await ws.recv()
+                print(msg)
+        except websockets.ConnectionClosed:
+            print("Connection closed by server.")
+        except KeyboardInterrupt:
+            print("\nUser interrupted. Closing...")
+            await ws.close()
 
 
 asyncio.run(test())

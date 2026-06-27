@@ -25,7 +25,7 @@ def validate_event_id(event_id: str):
         print(f"[{event_id}] Invalid stream type: {parts[1]}")
         return
     if parts[2] and parts[2] not in KlineIntervals._value2member_map_:
-        print(f"[{event_id}] Invalid interval: {parts[3]}")
+        print(f"[{event_id}] Invalid interval: {parts[2]}")
         return
 
     return event_id

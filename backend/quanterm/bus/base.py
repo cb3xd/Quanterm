@@ -22,6 +22,7 @@ class Listener:
 class EventBus:
     def __init__(self) -> None:
         self._listeners: defaultdict[str, set[EventHandler]] = defaultdict(set)
+        self._handler_events: defaultdict[EventHandler, set[str]] = defaultdict(set)
         self._background_tasks: set[asyncio.Task] = set()
 
     def on(
@@ -29,6 +30,7 @@ class EventBus:
     ) -> Callable[[EventHandler], Listener] | Listener:
         def decorator(handler_function: EventHandler) -> Listener:
             self._listeners[event].add(handler_function)
+            self._handler_events[handler_function].add(event)
             return Listener(self, event, handler_function)
 
         if handler is None:
@@ -45,9 +47,19 @@ class EventBus:
 
     def remove_listener(self, event: str, handler: EventHandler) -> None:
         if event in self._listeners:
-            self._listeners[event].remove(handler)
+            self._listeners[event].discard(handler)
+            self._handler_events[handler].discard(event)
             if not self._listeners[event]:
                 del self._listeners[event]
+            if not self._handler_events[handler]:
+                del self._handler_events[handler]
+
+    def unregister_all(self, handler: EventHandler):
+        events = self._handler_events.get(handler)
+        if events is None:
+            return
+        for event in events.copy():
+            self.remove_listener(event, handler)
 
     def get_listeners(self) -> dict[str, set[EventHandler]]:
         return self._listeners.copy()
@@ -56,7 +68,8 @@ class EventBus:
         try:
             await handler(message)
         except Exception as e:
-            print(f"CRITICAL: Event handler crashed {e}")
+            print("[71] Event Bus base.py: ", e)
+            self.unregister_all(handler)
 
 
 _event_bus_instance = EventBus()

@@ -15,10 +15,11 @@ from pathlib import Path
 from typing import Optional
 
 import httpx
+import msgspec
 import websockets
 
 # Configuration Defaults
-DEFAULT_WS_URL = "wss://fstream.binance.com/market/stream"
+DEFAULT_WS_URL = "ws://127.0.0.1:8000/ws"
 DEFAULT_HTTP_URL = "http://127.0.0.1:8000/api/all_exchange_symbols"
 DEFAULT_DURATION = 30  # seconds
 
@@ -177,23 +178,22 @@ async def single_client_streamer(ws_url, symbol_map, stop_event, subs_done, stat
     connected = False
 
     # Compose streams parameter using the upgraded URL format logic
-    streams = [f"{symbol.lower()}@aggTrade" for symbol in symbol_map.keys()]
-    stream_query = "/".join(streams)
-    full_url = f"{ws_url}?streams={stream_query}"
+    streams = [f"trade_stream.{symbol.lower()}" for symbol in symbol_map.keys()]
+
+    encoder = msgspec.json.Encoder()
+    params = encoder.encode(
+        {"method": "sub", "events": streams, "exchange": "binanceusdm"}
+    )
 
     try:
-        async with websockets.connect(
-            full_url,
-            ping_interval=20,
-            ping_timeout=120,
-            close_timeout=5,
-        ) as ws:
+        async with websockets.connect(DEFAULT_WS_URL) as ws:
             connected = True
             stats["connected"] = True
             stats["subs_sent"] = len(streams)
             subs_done.set()
 
             print(f"Connected to combined stream with {len(streams)} targets.")
+            await ws.send(params)
             await reader_loop(ws, stop_event, stats)
 
     except Exception as e:

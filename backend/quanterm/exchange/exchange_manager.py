@@ -31,9 +31,7 @@ class ExchangeManager:
 
     async def connect_all_websockets(self):
         if not self.active_exchanges:
-            print("No active exchanges to connect.")
             return
-        print(f"Connecting websockets for {len(self.active_exchanges)} exchanges.")
         tasks = [
             exchange.connect_websocket() for exchange in self.active_exchanges.values()
         ]

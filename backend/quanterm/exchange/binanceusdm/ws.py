@@ -64,6 +64,8 @@ class BinanceWebsocket(BaseWS):
             await self.websocket.close()
             self.websocket = None
 
+        self.active_streams.clear()
+
         print("WS Disconnected, attempting reconnect")
         await self.connect()
 

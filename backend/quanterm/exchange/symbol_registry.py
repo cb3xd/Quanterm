@@ -7,7 +7,7 @@ class SymbolRegistry:
         self.supported_symbols: dict[str, set[ExchangeID]] = {}
         self.active_exchanges = manager.active_exchanges
 
-    async def get_all_symbols(self):
+    async def _get_all_symbols(self):
         for exchange_id, exchange_instance in self.active_exchanges.items():
             try:
                 symbols = await exchange_instance.api.fetch_symbols()
@@ -18,6 +18,13 @@ class SymbolRegistry:
                 print(f"Error fetching from {exchange_id}: {e}")
 
         return self.supported_symbols
+
+    async def get_all_symbols(self):
+        if self.supported_symbols:
+            return self.supported_symbols.copy()
+        else:
+            symbols = await self._get_all_symbols()
+            return symbols
 
 
 symbol_registry = SymbolRegistry()

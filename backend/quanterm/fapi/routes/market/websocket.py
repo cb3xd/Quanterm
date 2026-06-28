@@ -40,9 +40,6 @@ async def websocket_loop(websocket: WebSocket):
     disconnected = False
 
     async def queue_packet(packet: Struct):
-        queue_len = len(queue)
-        if queue_len > 0:
-            logger.info(f"Current queue length:{queue_len}")
         queue.append(_msg_encoder.encode(packet))
         data_available.set()
 

@@ -1,39 +1,20 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from quanterm.bus.base import get_event_bus
 from quanterm.exchange.exchange_manager import manager
 from quanterm.fapi.routes.market.kline import router as kline_router
 from quanterm.fapi.routes.market.symbol_price_change import (
     router as price_change_router,
 )
-
-
 from quanterm.fapi.routes.market.symbols import router as symbols_router
 from quanterm.fapi.routes.market.websocket import router as websocket_router
-import tracemalloc
-import asyncio
-import logging
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("uvicorn")
-
-
-async def monitor():
-    _event_bus = get_event_bus()
-    while True:
-        logger.info(f"Active listeners: {len(_event_bus._listeners)}")
-        await asyncio.sleep(5)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    tracemalloc.start(10)
     await manager.connect_all_websockets()
-    asyncio.create_task(monitor())
     yield
     await manager.close_all()
-    tracemalloc.stop()
 
 
 app = FastAPI(lifespan=lifespan)

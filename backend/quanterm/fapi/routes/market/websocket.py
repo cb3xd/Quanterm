@@ -73,7 +73,7 @@ async def websocket_loop(websocket: WebSocket):
                     map(lambda event_id: message.exchange + "." + event_id, events)
                 )
                 for event_id in event_ids:
-                    _event_bus.on(event_id, queue_packet)
+                    _event_bus.on(event_id.replace("-", ""), queue_packet)
                 await exchange.ws.subscribe(events)
             except Exception:
                 disconnected = True

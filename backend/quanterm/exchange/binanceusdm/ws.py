@@ -92,6 +92,7 @@ class BinanceWebsocket(BaseWS):
             "method": "SUBSCRIBE",
             "params": list(formatted_events),
         }
+        logging.getLogger("uvicorn").info(f"Connecting to {events.__len__()} streams.")
         await self.websocket.send(json.dumps(subscribe_message))
 
     @override

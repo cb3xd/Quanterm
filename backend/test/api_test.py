@@ -1,12 +1,12 @@
 import asyncio
 
-from quanterm.exchange.binanceusdm.external_api import fetch_kline
-from quanterm.types import KlineIntervals
+from quanterm.exchange.binanceusdm.external_api import BinanceAPI
 
 
 async def main():
-    test = await fetch_kline("btcusdt", KlineIntervals.minute)
-    print(test.candles[1])
+    api = BinanceAPI()
+    test = await api.fetch_symbols()
+    print(test)
 
 
 asyncio.run(main())

@@ -5,6 +5,7 @@ import aiohttp
 import msgspec
 from msgspec.json import Encoder
 
+from quanterm import exchange
 from quanterm.external_api.base import BaseAPI
 from quanterm.types import KlineIntervals
 
@@ -119,7 +120,9 @@ class BinanceAPI(BaseAPI):
     @override
     async def fetch_symbols(self) -> set[str]:
         exchange_info = await self.fetch_exchange_info()
-        symbols = {s.symbol.lower() for s in exchange_info.symbols}
+        symbols = set()
+        for symbol in exchange_info.symbols:
+            symbols.add(f"{symbol.base_asset.lower()}-{symbol.quote_asset.lower()}")
         return symbols
 
     @override

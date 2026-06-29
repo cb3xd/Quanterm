@@ -10,7 +10,7 @@ stream_type_map = {
 
 def format_id(event_id: str) -> str:
     parts = event_id.split(".")
-    symbol = parts[1].lower()
+    symbol = parts[1].replace("-", "")
     stream_type = StreamTypes(parts[0])
     interval = None
     _stream_type = stream_type_map.get(stream_type)

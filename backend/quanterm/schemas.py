@@ -13,6 +13,7 @@ class TradePacket(Struct):
 
 class KlinePacket(Struct):
     exchange_id: str
+    event_time: int
     open_time: int
     close_time: int
     symbol: str

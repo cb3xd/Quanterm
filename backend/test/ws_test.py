@@ -1,4 +1,6 @@
 import asyncio
+from collections import deque
+import time
 
 import msgspec
 import websockets
@@ -48,13 +50,16 @@ def build_subscribe_packets(
     return packets
 
 
+decoder = msgspec.json.Decoder()
+
+
 async def test():
     symbols = fetch_symbols()
     symbols = dict(list(symbols.items())[: len(symbols)])
     total = sum(len(v) for v in symbols.values())
     print(f"Fetched {len(symbols)} unique symbols ({total} symbol-exchange pairs)")
 
-    packets = build_subscribe_packets(symbols)
+    packets = build_subscribe_packets(symbols)[:10]
     print(f"Built {len(packets)} subscribe packet(s) (batch size: {BATCH_SIZE})")
     for i, pkt in enumerate(packets):
         decoded = msgspec.json.decode(pkt)
@@ -73,9 +78,19 @@ async def test():
             await ws.send(pkt)
         print("\nSubscribed. Listening for events...\n")
         try:
+            samples = deque(maxlen=5000)
             while True:
                 msg = await ws.recv()
-                print(msg)
+                decoded = decoder.decode(msg)
+                samples.append(
+                    round((time.time() * 1000) - decoded.get("event_time"), 2)
+                )
+                print(
+                    f" \rLatency: {round(sum(samples) / len(samples))}ms",
+                    end="",
+                    flush=True,
+                )
+
         except websockets.ConnectionClosed:
             print("Connection closed by server.")
         except KeyboardInterrupt:

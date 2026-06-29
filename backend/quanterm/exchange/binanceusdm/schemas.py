@@ -56,6 +56,7 @@ def map_trade(packet: BinanceTradePacket):
 def map_kline(packet: BinanceKlinePacket):
     return KlinePacket(
         exchange_id=ExchangeID.binanceusdm,
+        event_time=packet.event_time,
         symbol=packet.symbol,
         open_time=packet.kline.kline_start_time,
         close_time=packet.kline.kline_close_time,

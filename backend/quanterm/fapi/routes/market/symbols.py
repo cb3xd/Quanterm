@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Response
+from fastapi import Response
 from msgspec import json
 from quanterm.exchange.symbol_registry import symbol_registry
+from quanterm.fapi.routers import api_router
 
-router = APIRouter()
 _encoder = json.Encoder()
 
 
-@router.get("/all_exchange_symbols")
+@api_router.get("/all_exchange_symbols")
 async def get_all_exchange_symbols():
     symbols = await symbol_registry.get_all_symbols()
     serialized_bytes = _encoder.encode(symbols)

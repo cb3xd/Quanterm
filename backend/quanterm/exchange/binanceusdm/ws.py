@@ -10,6 +10,7 @@ from quanterm.exchange.binanceusdm.schemas import (
     StreamRouterType,
 )
 from quanterm.exchange.binanceusdm.utils import format_id
+from quanterm.exchange.constants import ExchangeID
 from quanterm.websocket.base import BaseWS
 
 
@@ -19,8 +20,6 @@ class BinanceEnvelope(msgspec.Struct):
 
 
 _envelope_decoder = msgspec.json.Decoder(BinanceEnvelope)
-
-logging.getLogger("websockets").setLevel(logging.CRITICAL)
 
 
 class BinanceWebsocket(BaseWS):
@@ -81,16 +80,23 @@ class BinanceWebsocket(BaseWS):
             return
 
         events = events.difference(self.active_streams)
+        stream_keys: set[str] = set()
+
+        for event in events:
+            stream_key = format_id(event)
+            stream_keys.add(stream_key)
+            self.stream_registry.register(
+                f"{ExchangeID.binanceusdm}.{event}", stream_key
+            )
 
         self.active_streams.update(events)
-        formatted_events: set[str] = set()
-        for event in events:
-            formatted_events.add(format_id(event))
-        if formatted_events.__len__() <= 0:
+
+        if stream_keys.__len__() <= 0:
             return
+
         subscribe_message = {
             "method": "SUBSCRIBE",
-            "params": list(formatted_events),
+            "params": list(stream_keys),
         }
         logging.getLogger("uvicorn").info(f"Connecting to {events.__len__()} streams.")
         await self.websocket.send(json.dumps(subscribe_message))
@@ -108,8 +114,10 @@ class BinanceWebsocket(BaseWS):
             formatted_data = PACKET_MAPPERS.get(type(msg.packet))
             if formatted_data is None:
                 return
+            event_id = self.stream_registry.get_event_id(msg.stream)
             formatted_data = formatted_data(msg.packet)
-            await self.event_bus.publish(formatted_data.event_id, formatted_data)
+            formatted_data.event_id = event_id
+            await self.event_bus.publish(event_id, formatted_data)
         except msgspec.ValidationError:
             pass
         except Exception as e:

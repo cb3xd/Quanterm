@@ -9,7 +9,7 @@ import httpx
 
 encoder = msgspec.json.Encoder()
 FAPI_URL = "http://localhost:8000"
-WS_URL = "ws://localhost:8000/ws"
+WS_URL = "ws://localhost:8000/ws/cex"
 BATCH_SIZE = 100
 
 

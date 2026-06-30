@@ -47,9 +47,6 @@ def map_trade(packet: BinanceTradePacket):
         size=packet.size,
         event_time=packet.event_time,
         is_buy=packet.is_buy,
-        event_id=generate_event_id(
-            ExchangeID.binanceusdm, packet.symbol.lower(), StreamTypes.trade_stream
-        ),
     )
 
 
@@ -70,12 +67,6 @@ def map_kline(packet: BinanceKlinePacket):
         is_closed=packet.kline.is_closed,
         taker_buy_base_volume=packet.kline.taker_buy_base_asset_volume,
         taker_buy_quote_volume=packet.kline.taker_buy_quote_asset_volume,
-        event_id=generate_event_id(
-            ExchangeID.binanceusdm,
-            packet.symbol.lower(),
-            StreamTypes.kline_stream,
-            extra=packet.kline.interval,
-        ),
     )
 
 

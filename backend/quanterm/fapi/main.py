@@ -2,12 +2,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from quanterm.exchange.exchange_manager import manager
-from quanterm.fapi.routes.market.kline import router as kline_router
-from quanterm.fapi.routes.market.symbol_price_change import (
-    router as price_change_router,
-)
-from quanterm.fapi.routes.market.symbols import router as symbols_router
-from quanterm.fapi.routes.market.websocket import router as websocket_router
+from quanterm.fapi.routers import ws_router, api_router
+from quanterm.fapi.routes import market  # noqa: F401 registers routes
 
 
 @asynccontextmanager
@@ -19,16 +15,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+app.include_router(ws_router, prefix="/ws")
+app.include_router(api_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origin_regex=r"^https?://localhost(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-app.include_router(websocket_router)
-app.include_router(symbols_router, prefix="/api")
-app.include_router(price_change_router, prefix="/api")
-app.include_router(kline_router, prefix="/api")

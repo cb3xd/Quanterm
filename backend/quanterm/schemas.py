@@ -8,7 +8,7 @@ class TradePacket(Struct):
     size: str
     event_time: int
     is_buy: bool
-    event_id: str
+    event_id: str | None = None
 
 
 class KlinePacket(Struct):
@@ -27,4 +27,4 @@ class KlinePacket(Struct):
     is_closed: bool
     taker_buy_base_volume: str
     taker_buy_quote_volume: str
-    event_id: str
+    event_id: str | None = None

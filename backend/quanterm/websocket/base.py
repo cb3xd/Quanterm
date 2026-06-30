@@ -3,13 +3,15 @@ import logging
 from abc import ABC, abstractmethod
 from websockets import ClientConnection, ConnectionClosed
 from quanterm.bus.base import EventBus, get_event_bus
+from quanterm.exchange.stream_registry import get_stream_registry
 
-logger = logging.getLogger("quanterm.ws")
+logger = logging.getLogger("uvicorn")
 
 
 class BaseWS(ABC):
     def __init__(self) -> None:
         self.active_streams: set[str] = set()
+        self.stream_registry = get_stream_registry()
         self.uri: str = ""
         self.websocket: ClientConnection | None = None
         self._watch_task: asyncio.Task[None] | None = None

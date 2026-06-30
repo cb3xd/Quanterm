@@ -2,13 +2,12 @@ import asyncio
 import collections
 from enum import StrEnum
 import logging
-from fastapi import APIRouter, WebSocket
+from fastapi import WebSocket
 from msgspec import Struct, json
 from quanterm.bus.base import get_event_bus
 from quanterm.exchange.constants import ExchangeID
 from quanterm.exchange.exchange_manager import manager
-
-router = APIRouter()
+from quanterm.fapi.routers import ws_router
 
 
 class FapiMethods(StrEnum):
@@ -68,13 +67,13 @@ async def websocket_loop(websocket: WebSocket):
                 if type(message) is Unsubscribe:
                     continue
                 events = message.events
+                await exchange.ws.subscribe(events)
 
                 event_ids = set(
                     map(lambda event_id: message.exchange + "." + event_id, events)
                 )
                 for event_id in event_ids:
-                    _event_bus.on(event_id.replace("-", ""), queue_packet)
-                await exchange.ws.subscribe(events)
+                    _event_bus.on(event_id, queue_packet)
             except Exception:
                 disconnected = True
                 break
@@ -87,7 +86,7 @@ async def websocket_loop(websocket: WebSocket):
         _event_bus.unregister_all(queue_packet)
 
 
-@router.websocket("/ws")
-async def ws_router(websocket: WebSocket):
+@ws_router.websocket("/cex")
+async def websocket(websocket: WebSocket):
     await websocket.accept()
     await websocket_loop(websocket)

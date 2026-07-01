@@ -61,8 +61,11 @@ async def websocket_loop(websocket: WebSocket):
         while not disconnected:
             try:
                 data = await websocket.receive_bytes()
+
                 message = _msg_decoder.decode(data)
                 exchange = manager.get_exchange(message.exchange)
+
+                logging.getLogger("uvicorn").info(message)
 
                 if type(message) is Unsubscribe:
                     continue

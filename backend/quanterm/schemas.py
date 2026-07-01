@@ -28,3 +28,18 @@ class KlinePacket(Struct):
     taker_buy_base_volume: str
     taker_buy_quote_volume: str
     event_id: str | None = None
+
+
+class MarketDataPacket(Struct):
+    event_time: int
+    market_price: str
+    average_price: str
+    index_price: str
+    funding_rate: str
+    next_funding_time: int
+
+
+class AggregateMarketDataPacket(Struct):
+    exchange_id: str
+    market_data: dict[str, MarketDataPacket]
+    event_id: str | None = None

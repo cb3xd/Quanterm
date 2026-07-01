@@ -15,7 +15,7 @@ from quanterm.websocket.base import BaseWS
 
 
 class BinanceEnvelope(msgspec.Struct):
-    stream: str | None
+    stream: str
     packet: StreamRouterType = msgspec.field(name="data")
 
 
@@ -111,7 +111,10 @@ class BinanceWebsocket(BaseWS):
             )
             if msg.packet is None:
                 return
-            formatted_data = PACKET_MAPPERS.get(type(msg.packet))
+            msg_type = type(msg.packet)
+
+            formatted_data = PACKET_MAPPERS.get(msg_type)
+
             if formatted_data is None:
                 return
             event_id = self.stream_registry.get_event_id(msg.stream)

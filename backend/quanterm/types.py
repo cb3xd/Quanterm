@@ -4,6 +4,7 @@ from enum import StrEnum
 class StreamTypes(StrEnum):
     trade_stream = "trade_stream"
     kline_stream = "kline_stream"
+    market_price = "market_price"
 
 
 class KlineIntervals(StrEnum):

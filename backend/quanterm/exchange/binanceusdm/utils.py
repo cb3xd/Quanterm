@@ -5,10 +5,13 @@ from quanterm.types import KlineIntervals, StreamTypes
 stream_type_map = {
     StreamTypes.trade_stream: BinanceMarketStreams.TRADES,
     StreamTypes.kline_stream: BinanceMarketStreams.KLINE,
+    StreamTypes.market_price: BinanceMarketStreams.MARK_PRICE_ALL,
 }
 
 
 def format_id(event_id: str) -> str:
+    if StreamTypes.market_price in event_id:
+        return BinanceMarketStreams.MARK_PRICE_ALL
     parts = event_id.split(".")
     symbol = parts[1].replace("-", "")
     stream_type = StreamTypes(parts[0])

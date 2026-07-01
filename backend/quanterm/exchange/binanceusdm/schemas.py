@@ -1,9 +1,14 @@
-from typing import Callable
+from typing import Any, Callable
 
 from msgspec import Struct, field, json
-from quanterm.bus.utils import generate_event_id
 from quanterm.exchange.constants import ExchangeID
-from quanterm.schemas import KlinePacket, TradePacket
+from quanterm.exchange.symbol_registry import symbol_registry
+from quanterm.schemas import (
+    AggregateMarketDataPacket,
+    KlinePacket,
+    MarketDataPacket,
+    TradePacket,
+)
 from quanterm.types import KlineIntervals, StreamTypes
 
 
@@ -70,11 +75,60 @@ def map_kline(packet: BinanceKlinePacket):
     )
 
 
-StreamRouterType = BinanceTradePacket | BinanceKlinePacket
+class BinanceMarketData(Struct, tag_field="e", tag="markPriceUpdate"):
+    event_time: int = field(name="E")
+    symbol: str = field(name="s")
+    mark_price: str = field(name="p")
+    average_price: str = field(name="ap")
+    index_price: str = field(name="i")
+    funding_rate: str = field(name="r")
+    next_funding_time: int = field(name="T")
+    market_type: int = field(name="st")
+
+
+def map_market_data(packets: list[BinanceMarketData]):
+    market_data: dict[str, MarketDataPacket] = {}
+    for pair_data in packets:
+        if pair_data.market_type == 2:
+            continue
+        dashed_symbol = symbol_registry.get_dash_format(pair_data.symbol.lower())
+        if dashed_symbol is None:
+            continue
+        market_data[dashed_symbol] = MarketDataPacket(
+            event_time=pair_data.event_time,
+            market_price=pair_data.mark_price,
+            average_price=pair_data.average_price,
+            index_price=pair_data.index_price,
+            funding_rate=pair_data.funding_rate,
+            next_funding_time=pair_data.next_funding_time,
+        )
+
+    return AggregateMarketDataPacket(
+        exchange_id=ExchangeID.binanceusdm, market_data=market_data
+    )
+
+
+def list_mapper(packets: list):
+    if not packets:
+        return
+    packet_type = type(packets[0])
+    packet_mapper = PACKET_MAPPERS.get(packet_type)
+
+    if packet_mapper is None:
+        logging.getLogger("uvicorn").error("[list_mapper] Invalid mapper")
+        return
+
+    mapped_packet = packet_mapper(packets)
+    return mapped_packet
+
+
+StreamRouterType = BinanceTradePacket | BinanceKlinePacket | list[BinanceMarketData]
 
 WS_DECODER = json.Decoder(StreamRouterType)
 
-PACKET_MAPPERS: dict[type[Struct], Callable] = {
+PACKET_MAPPERS: dict[Any, Callable] = {
     BinanceTradePacket: map_trade,
     BinanceKlinePacket: map_kline,
+    list: list_mapper,
+    BinanceMarketData: map_market_data,
 }

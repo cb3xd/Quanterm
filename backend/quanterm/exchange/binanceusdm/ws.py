@@ -106,9 +106,8 @@ class BinanceWebsocket(BaseWS):
         try:
             if raw.startswith(b'{"result"}'):
                 return
-            msg = await asyncio.get_event_loop().run_in_executor(
-                None, _envelope_decoder.decode, raw
-            )
+
+            msg = _envelope_decoder.decode(raw)
             if msg.packet is None:
                 return
             msg_type = type(msg.packet)
@@ -118,10 +117,12 @@ class BinanceWebsocket(BaseWS):
             if formatted_data is None:
                 return
             event_id = self.stream_registry.get_event_id(msg.stream)
+            if event_id is None:
+                return
             formatted_data = formatted_data(msg.packet)
             formatted_data.event_id = event_id
             await self.event_bus.publish(event_id, formatted_data)
         except msgspec.ValidationError:
             pass
-        except Exception as e:
-            print("WS Error:", e)
+        except Exception:
+            return

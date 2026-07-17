@@ -4,17 +4,19 @@
     websocketStore,
     connect,
     subscribe,
+    streamsStore,
   } from "$lib/components/api/websocket.svelte";
   import Button from "$lib/components/ui/button/button.svelte";
+  import Monitor from "$lib/components/ui/custom/monitor-panel/Monitor.svelte";
   connect();
 </script>
 
 <div class="min-h-screen">
   <Topbar />
-  <h1>{websocketStore.isConnected}</h1>
+  <Monitor />
   <Button
-    variant="default"
-    onclick={() => subscribe(["trade_stream.btcusdt"], "binanceusdm")}
-    >SUB</Button
+    variant="Ghost"
+    onclick={() => subscribe(["trade_stream.btc-usdt"], "binanceusdm")}
+    >Sub</Button
   >
 </div>

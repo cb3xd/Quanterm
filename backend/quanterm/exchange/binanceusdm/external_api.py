@@ -10,6 +10,10 @@ from quanterm.external_api.base import BaseAPI
 from quanterm.types import KlineIntervals
 
 
+class ServerTime(msgspec.Struct, rename="camel"):
+    server_time: int
+
+
 class RateLimit(msgspec.Struct, rename="camel"):
     interval: str
     interval_num: int
@@ -105,6 +109,7 @@ class BinanceAPI(BaseAPI):
         kline_decoder = msgspec.json.Decoder(list[Candle])
         self.encoder = Encoder()
         self.price_change_decoder = msgspec.json.Decoder(TickerPriceChange)
+        self.server_time_decoder = msgspec.json.Decoder(ServerTime)
         self._session: aiohttp.ClientSession | None = None
         super().__init__(url, kline_decoder)
 
@@ -136,7 +141,7 @@ class BinanceAPI(BaseAPI):
 
     @override
     async def fetch_kline(self, symbol: str, interval: KlineIntervals):
-        params = {"symbol": symbol.upper(), "interval": interval}
+        params = {"symbol": symbol.replace("-", "").upper(), "interval": interval}
 
         session = await self._get_session()
         async with session.get(f"{self.url}/klines", params=params) as r:

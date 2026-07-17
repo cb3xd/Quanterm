@@ -4,6 +4,11 @@ let websocket = $state({
   error: ""
 })
 
+let packetBuffer = $state({
+  streams: {},
+})
+
+let exchangeRegistry = $derived(Array.from(new Set(Object.keys(packetBuffer.streams).map(k => k.split('.')[0]))));
 
 export function connect() {
   console.log("Connecting")
@@ -13,7 +18,8 @@ export function connect() {
   websocket.connection.onmessage = async (e) => {
     const text = await e.data.text();
     const packet = JSON.parse(text); // Change these later on
-    test(packet)
+
+    packetBuffer.streams[packet.event_id] = packet
   }
   websocket.connection.onclose = () => websocket.connected = false;
 }
@@ -32,12 +38,15 @@ export function subscribe(events, exchange) {
   websocket.connection.send(new TextEncoder().encode(packet));
 }
 
-function test(packet) {
-  console.log(packet)
-}
 
 export const websocketStore = {
   get connection() { return websocket.connection },
   get isConnected() { return websocket.connected },
-  get error() { return websocket.error }
+  get error() { return websocket.error },
+}
+export const streamsStore = {
+  get streams() { return packetBuffer.streams },
+}
+export const exchangesStore = {
+  get exchanges() { return exchangeRegistry }
 }

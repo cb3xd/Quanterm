@@ -28,7 +28,7 @@ export async function fetchTickerPriceChange(symbol) {
   tickerPriceChange.loading = true;
   try {
     const params = new URLSearchParams({ symbol: symbol });
-    const endpoint = `price_change/binanceusdm`;
+    const endpoint = `price-change/binanceusdm`;
     const result = await fetchApiData(endpoint, params);
 
     const index = tickerPriceChange.data.findIndex((item) => item.symbol === symbol);
@@ -50,7 +50,7 @@ export async function fetchTickerPriceChange(symbol) {
 export async function fetchSymbols() {
   symbols.loading = true;
   try {
-    symbols.data = await fetchApiData("all_exchange_symbols")
+    symbols.data = await fetchApiData("symbols")
     symbols.error = "";
   } catch (err) {
     symbols.error = "Failed to load symbols";
@@ -97,14 +97,12 @@ export const symbolStore = {
   }
 };
 
-
 export const klineStore = {
   get current() { return klines.data },
   get isLoading() { return klines.loading },
   get error() { return klines.error },
 
 }
-
 
 export const tickerPriceChangeStore = {
   get current() { return tickerPriceChange.data },

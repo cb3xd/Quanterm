@@ -7,7 +7,7 @@ encoder = msgspec.json.Encoder()
 
 
 async def stream_data():
-    uri = "ws://localhost:8000/ws/cex"
+    uri = "ws://localhost:8000/ws"
     async with websockets.connect(uri) as websocket:
         # Prepare payload as bytes
         payload = encoder.encode(

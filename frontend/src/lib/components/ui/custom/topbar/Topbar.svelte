@@ -1,13 +1,14 @@
 <script>
-  import Label from "../../label/label.svelte";
-  import Symbols from "./Symbols.svelte";
   import Separator from "../../separator/separator.svelte";
+  import ChartDropdown from "./ChartDropdown.svelte";
 </script>
 
 <div>
-  <div class="flex flex-row min-w-screen gap-2 px-2">
-    <Label class="italic ">Quanterm</Label>
-    <Symbols />
+  <div
+    class="flex flex-row min-w-screen gap-2 justify-between items-center mb-1"
+  >
+    <div class="flex flex-row w-max gap-2">
+      <ChartDropdown />
+    </div>
   </div>
-  <Separator />
 </div>

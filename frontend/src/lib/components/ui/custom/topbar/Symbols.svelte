@@ -26,9 +26,9 @@
 
 <Dialog.Root>
   <Dialog.Trigger
-    class={`${buttonVariants({ variant: "outline" })} cursor-pointer`}
+    class={`${buttonVariants({ variant: "outline" })} w-full items-center justify-start cursor-pointer`}
   >
-    Symbols
+    CEX Symbols
   </Dialog.Trigger>
   <Dialog.Content class="sm:max-w-md">
     <Dialog.Header>

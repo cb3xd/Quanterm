@@ -6,7 +6,7 @@ from quanterm.fapi.routers import api_router
 _encoder = json.Encoder()
 
 
-@api_router.get("/all_exchange_symbols")
+@api_router.get("/symbols")
 async def get_all_exchange_symbols():
     symbols = await symbol_registry.get_all_symbols()
     serialized_bytes = _encoder.encode(symbols)

@@ -8,11 +8,13 @@
   } from "$lib/components/api/websocket.svelte";
   import Button from "$lib/components/ui/button/button.svelte";
   import Monitor from "$lib/components/ui/custom/monitor-panel/Monitor.svelte";
+  import Tabs from "$lib/components/ui/custom/tabs/tabs.svelte";
   connect();
 </script>
 
 <div class="min-h-screen">
   <Topbar />
+  <Tabs></Tabs>
   <Monitor />
   <Button
     variant="Ghost"

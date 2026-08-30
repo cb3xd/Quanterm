@@ -69,7 +69,7 @@ export async function fetchKline(exchangeId, symbol, interval,) {
     const result = await fetchApiData(endpoint, params);
     const keys = Object.keys(klines.data);
     if (keys.length >= MAX_KLINE_DATASETS && !klines.data[key]) {
-      delete klines.data[key[0]];
+      delete klines.data[keys[0]];
     }
     klines.data[key] = result;
 

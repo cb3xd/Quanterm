@@ -97,6 +97,13 @@ export const symbolStore = {
   }
 };
 
+export const exchangesStore = {
+  get current() { return [...new Set(symbolStore.flattened.map((item) => item.exchange)),] },
+  get isLoading() { return symbols.loading },
+  get error() { return symbols.error },
+
+};
+
 export const klineStore = {
   get current() { return klines.data },
   get isLoading() { return klines.loading },

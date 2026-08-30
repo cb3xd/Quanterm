@@ -3,6 +3,7 @@
     fetchKline,
     fetchSymbols,
     symbolStore,
+    exchangesStore,
   } from "$lib/components/api/apiDataStore.svelte";
   import * as Popover from "$lib/components/ui/popover/index";
   import { Label } from "$lib/components/ui/label/index";
@@ -10,28 +11,31 @@
   import ScrollArea from "$lib/components/ui/scroll-area/scroll-area.svelte";
   import * as Select from "$lib/components/ui/select/index";
   import Input from "$lib/components/ui/input/input.svelte";
+
+  // On startup
   $effect(() => {
     fetchSymbols();
   });
-  let exchanges = $derived([
-    ...new Set(symbolStore.flattened.map((item) => item.exchange)),
-  ]);
+
+  let exchanges = $derived(exchangesStore.current);
   let exchangeFilter = $state("");
   let exchangeContent = $derived(
-    exchangeFilter === "" ? "Platform" : exchangeFilter,
+    exchangeFilter === "" ? "Platform" : exchangeFilter, // This is whats displayed on the button dropdown thing
   );
+
   let symbolDisabled = $derived(exchangeFilter === "" ? true : false);
   let searchInput = $state("");
   let filteredSymbols = $derived(
     searchInput === ""
       ? []
-      : symbolStore.flattened.filter(
-          ({ symbol, exchange }) =>
-            exchange === exchangeFilter &&
-            symbol.toLowerCase().startsWith(searchInput.toLowerCase()),
-        ),
+      : symbolStore.flattened
+          .filter(
+            ({ symbol, exchange }) =>
+              exchange === exchangeFilter &&
+              symbol.toLowerCase().startsWith(searchInput.toLowerCase()),
+          )
+          .slice(0, 5),
   );
-  let topFilteredSymbols = $derived(filteredSymbols.slice(0, 5));
   let showPopover = $derived(searchInput !== "" ? true : false);
   let ticker = $state("");
   let loadHist = $state(false);
@@ -41,9 +45,11 @@
   <Label for="platform">Platform</Label>
   <Select.Root id="platform" type="single" bind:value={exchangeFilter}>
     <Select.Trigger class="w-[200px]">{exchangeContent}</Select.Trigger>
-    <Select.Content>
+    <Select.Content class="bg-black">
       {#each exchanges as exchange}
-        <Select.Item value={exchange} label={exchange}>{exchange}</Select.Item>
+        <Select.Item value={exchange} class="bg-black" label={exchange}
+          >{exchange}</Select.Item
+        >
       {/each}
     </Select.Content>
   </Select.Root>
@@ -53,7 +59,7 @@
   <div class="flex flex-col w-[200px]">
     <Input
       id="tickerSearch"
-      placeholder="BTCUSDT"
+      placeholder="BTC-USDT"
       bind:value={searchInput}
       class="w-[200px]"
       disabled={symbolDisabled}
@@ -61,29 +67,26 @@
     <Popover.Root bind:open={showPopover}>
       <Popover.Trigger></Popover.Trigger>
       <Popover.Content
-        class="w-fit align-middle"
+        class="flex gap-0 p-0 w-[200px]"
         onOpenAutoFocus={(e) => e.preventDefault()}
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
-        {#if searchInput == ""}
-          <p></p>
-        {:else}
-          <p>Results for: {searchInput}</p>
-          <ScrollArea class="w-[180px] h-fit border">
-            {#if symbolStore.isLoading}{:else}
-              {#each topFilteredSymbols as { symbol, exchange }}
+        {#if searchInput !== ""}
+          {#if symbolStore.isLoading}{:else}
+            {#each filteredSymbols as { symbol, exchange }}
+              <Popover.Close asChild>
                 <Button
                   variant="outline"
-                  class="flex  w-full justify-between cursor-pointer"
+                  class="cursor-pointer w-full"
                   onclick={() => {
                     ticker = symbol;
-                    searchInput = symbol;
+                    searchInput = symbol.toUpperCase();
                   }}
                   ><span>{symbol.toUpperCase()}</span>
-                </Button>
-              {/each}
-            {/if}
-          </ScrollArea>
+                </Button></Popover.Close
+              >
+            {/each}
+          {/if}
         {/if}
       </Popover.Content>
     </Popover.Root>
@@ -96,10 +99,12 @@
       >{loadHist ? "Past Hour" : "None"}</Select.Trigger
     >
     <Select.Content>
-      <Select.Group
-        ><Select.Item value={false} label="None" /><Select.Item
+      <Select.Group>
+        <Select.Item value={false} label="None" class="bg-black" />
+        <Select.Item
           value={true}
           label="Past Hour"
+          class="bg-black"
         /></Select.Group
       ></Select.Content
     >

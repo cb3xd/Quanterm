@@ -14,7 +14,12 @@
       <AddChartPopup />
       <Dialog.Footer>
         <Dialog.Close asChild
-          ><Button variant="outline">Add</Button>
+          ><Button
+            onclick={() => {
+              console.log("adding chart");
+            }}
+            variant="outline">Add</Button
+          >
           <Button variant="outline">Cancel</Button></Dialog.Close
         >
       </Dialog.Footer>

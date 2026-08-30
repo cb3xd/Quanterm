@@ -63,8 +63,9 @@ async def websocket_loop(websocket: WebSocket):
                 data = await websocket.receive_bytes()
 
                 message = _msg_decoder.decode(data)
-                logging.getLogger("uvicorn").info(message)
                 exchange = manager.get_exchange(message.exchange)
+
+                logging.getLogger("uvicorn").info(message)
 
                 if type(message) is Unsubscribe:
                     continue
@@ -88,7 +89,7 @@ async def websocket_loop(websocket: WebSocket):
         _event_bus.unregister_all(queue_packet)
 
 
-@ws_router.websocket("/ws")
+@ws_router.websocket("")
 async def websocket(websocket: WebSocket):
     await websocket.accept()
     await websocket_loop(websocket)

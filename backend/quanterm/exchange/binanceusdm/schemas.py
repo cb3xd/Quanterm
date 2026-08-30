@@ -115,6 +115,7 @@ def list_mapper(packets: list):
     packet_mapper = PACKET_MAPPERS.get(packet_type)
 
     if packet_mapper is None:
+        logging.getLogger("uvicorn").error("[list_mapper] Invalid mapper")
         return
 
     mapped_packet = packet_mapper(packets)

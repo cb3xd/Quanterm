@@ -15,7 +15,7 @@ BATCH_SIZE = 100
 
 def fetch_symbols() -> dict[str, list[str]]:
     """Fetch {symbol: [exchange_ids]} from the API."""
-    resp = httpx.get(f"{FAPI_URL}/api/symbols")
+    resp = httpx.get(f"{FAPI_URL}/api/all_exchange_symbols")
     resp.raise_for_status()
     return resp.json()
 
@@ -35,7 +35,7 @@ def build_subscribe_packets(
 
     packets = []
     for exchange, symbols in exchange_symbols.items():
-        events = [f"kline_stream.{s}.1m" for s in symbols]
+        events = [f"trade_stream.{s}" for s in symbols]
         # Chunk into batches
         for i in range(0, len(events), batch_size):
             chunk = events[i : i + batch_size]
@@ -92,7 +92,7 @@ async def test():
                 )
 
         except websockets.ConnectionClosed:
-            print("\nConnection closed by server.")
+            print("Connection closed by server.")
         except KeyboardInterrupt:
             print("\nUser interrupted. Closing...")
             await ws.close()

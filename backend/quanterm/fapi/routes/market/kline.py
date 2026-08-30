@@ -1,5 +1,3 @@
-import logging
-
 from msgspec import Struct, json, to_builtins
 from quanterm.exchange.constants import ExchangeID
 from quanterm.exchange.exchange_manager import manager

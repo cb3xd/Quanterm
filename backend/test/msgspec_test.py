@@ -1,78 +1,131 @@
-import websockets
-import asyncio
-import msgspec
-import json
+from typing import Callable
 
-encoder = msgspec.json.Encoder()
-decoder = msgspec.json.Decoder()
-
-generated_structs: dict[str, type[msgspec.Struct]] = {}
-decoders: dict[str, msgspec.json.Decoder] = {}
+from msgspec import Struct, field, json
+from quanterm.exchange.constants import ExchangeID
+from quanterm.schemas import KlinePacket, TradePacket
+from quanterm.types import KlineIntervals, StreamTypes
 
 
-async def generate_struct(packet_data: dict, event_type: str):
-    fields = []
-
-    for key, value in packet_data.items():
-        _ = (key, type(value))
-        fields.append(_)
-
-    struct = msgspec.defstruct(event_type, fields)
-    generated_structs[event_type] = struct
-    print(f"Generated struct at runtime: {generated_structs[event_type]}")
-    return struct
+class BinanceTradePacket(Struct, tag_field="e", tag="aggTrade", kw_only=True):
+    symbol: str = field(name="s")
+    event_time: int = field(name="E")
+    price: str = field(name="p")
+    size: str = field(name="q")
+    is_buy: bool = field(name="m")
+    exchange_id: ExchangeID = ExchangeID.binanceusdm
+    stream_type: StreamTypes = StreamTypes.trade_stream
 
 
-async def generate_decoder(struct: type[msgspec.Struct], event_type: str):
-    decoder = msgspec.json.Decoder(struct)
-    decoders[event_type] = decoder
-    return decoder
+class BinanceKlineData(Struct):
+    kline_start_time: int = field(name="t")
+    kline_close_time: int = field(name="T")
+    interval: KlineIntervals = field(name="i")
+    open_price: str = field(name="o")
+    high_price: str = field(name="h")
+    low_price: str = field(name="l")
+    close_price: str = field(name="c")
+    trade_count: int = field(name="n")
+    is_closed: bool = field(name="x")
+    base_asset_volume: str = field(name="v")
+    taker_buy_base_asset_volume: str = field(name="V")
+    taker_buy_quote_asset_volume: str = field(name="Q")
 
 
-async def decode_packet(packet: dict):
-    packet_data = packet.get("data")
-
-    if packet_data is None:
-        return
-
-    event_type = packet_data.get("e")
-
-    struct = generated_structs.get(event_type)
-
-    if struct is None:
-        struct = await generate_struct(packet_data, event_type)
-        pass
-
-    decoder = decoders.get(event_type)
-
-    if decoder is None:
-        decoder = await generate_decoder(struct, event_type)
-        pass
-
-    return decoder.decode(encoder.encode(packet_data))
+class BinanceKlinePacket(Struct, tag_field="e", tag="kline", kw_only=True):
+    symbol: str = field(name="s")
+    event_time: int = field(name="E")
+    kline: BinanceKlineData = field(name="k")
+    stream_type: StreamTypes = StreamTypes.kline_stream
 
 
-async def main():
-    uri = "wss://fstream.binance.com/market/stream"
+def map_trade(packet: BinanceTradePacket):
+    return TradePacket(
+        symbol=packet.symbol,
+        exchange_id=ExchangeID.binanceusdm,
+        price=packet.price,
+        size=packet.size,
+        event_time=packet.event_time,
+        is_buy=packet.is_buy,
+    )
 
-    async with websockets.connect(uri) as ws:
-        payload = json.dumps(
-            {"method": "SUBSCRIBE", "params": ["btcusdt@markPrice", "btcusdt@aggTrade"]}
-        )
-        await ws.send(payload)
 
-        while True:
-            try:
-                packet = await ws.recv(decode=False)
-                decoded_packet = await decode_packet(decoder.decode(packet))
-                print(generated_structs.values())
+def map_kline(packet: BinanceKlinePacket):
+    return KlinePacket(
+        exchange_id=ExchangeID.binanceusdm,
+        event_time=packet.event_time,
+        symbol=packet.symbol,
+        open_time=packet.kline.kline_start_time,
+        close_time=packet.kline.kline_close_time,
+        interval=packet.kline.interval,
+        open_price=packet.kline.open_price,
+        high_price=packet.kline.high_price,
+        low_price=packet.kline.low_price,
+        close_price=packet.kline.close_price,
+        volume=packet.kline.base_asset_volume,
+        trade_count=packet.kline.trade_count,
+        is_closed=packet.kline.is_closed,
+        taker_buy_base_volume=packet.kline.taker_buy_base_asset_volume,
+        taker_buy_quote_volume=packet.kline.taker_buy_quote_asset_volume,
+    )
 
-            except websockets.ConnectionClosed:
-                print("\nConnection closed")
-                break
-            except KeyboardInterrupt:
-                await ws.close()
+
+class BinanceMarketPriceData(Struct, tag_field="e", tag="markPriceUpdate"):
+    event_time: int = field(name="E")
+    symbol: str = field(name="s")
+    mark_price: str = field(name="p")
+    average_price: str = field(name="ap")
+    index_price: str = field(name="i")
+    funding_rate: str = field(name="r")
+    next_funding_time: int = field(name="T")
+
+
+StreamRouterType = (
+    BinanceTradePacket | BinanceKlinePacket | list[BinanceMarketPriceData]
+)
+
+WS_DECODER = json.Decoder(StreamRouterType)
+
+PACKET_MAPPERS: dict[type[Struct], Callable] = {
+    BinanceTradePacket: map_trade,
+    BinanceKlinePacket: map_kline,
+}
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    import json
+
+    packet = [
+        {
+            "e": "markPriceUpdate",
+            "E": 1562305380000,
+            "s": "BTCUSDT",
+            "p": "11185.87786614",
+            "ap": "11185.87786614",
+            "i": "11784.62659091",
+            "P": "11784.25641265",
+            "r": "0.00030000",
+            "T": 1562306400000,
+            "st": 1,
+        },
+        {
+            "e": "markPriceUpdate",
+            "E": 1562305380000,
+            "s": "BTCUSDT",
+            "p": "11185.87786614",
+            "ap": "11185.87786614",
+            "i": "11784.62659091",
+            "P": "11784.25641265",
+            "r": "0.00030000",
+            "T": 1562306400000,
+            "st": 1,
+        },
+    ]
+    result = WS_DECODER.decode(json.dumps(packet).encode())
+    print("Decoded successfully!")
+    for item in result:
+        print(f"  Type: {type(item).__name__}")
+        for field in dir(item):
+            if not field.startswith("_"):
+                val = getattr(item, field)
+                if not callable(val):
+                    print(f"  {field}: {val}")

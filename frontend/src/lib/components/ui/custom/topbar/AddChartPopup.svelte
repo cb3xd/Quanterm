@@ -1,24 +1,16 @@
 <script>
-  import {
-    fetchKline,
-    fetchSymbols,
-    symbolStore,
-    exchangesStore,
-  } from "$lib/components/api/apiDataStore.svelte";
   import * as Popover from "$lib/components/ui/popover/index";
   import { Label } from "$lib/components/ui/label/index";
   import Button from "$lib/components/ui/button/button.svelte";
-  import ScrollArea from "$lib/components/ui/scroll-area/scroll-area.svelte";
   import * as Select from "$lib/components/ui/select/index";
   import Input from "$lib/components/ui/input/input.svelte";
-
-  // On startup
-  $effect(() => {
-    fetchSymbols();
-  });
-
-  let exchanges = $derived(exchangesStore.current);
-  let exchangeFilter = $state("");
+  let {
+    exchanges = $bindable(),
+    exchangeFilter = $bindable(),
+    symbols = $bindable(),
+    ticker = $bindable(),
+    loadHist = $bindable(),
+  } = $props();
   let exchangeContent = $derived(
     exchangeFilter === "" ? "Platform" : exchangeFilter, // This is whats displayed on the button dropdown thing
   );
@@ -28,7 +20,7 @@
   let filteredSymbols = $derived(
     searchInput === ""
       ? []
-      : symbolStore.flattened
+      : symbols
           .filter(
             ({ symbol, exchange }) =>
               exchange === exchangeFilter &&
@@ -37,19 +29,23 @@
           .slice(0, 5),
   );
   let showPopover = $derived(searchInput !== "" ? true : false);
-  let ticker = $state("");
-  let loadHist = $state(false);
 </script>
 
-<div class="flex flex-row justify-between">
+<div class="flex justify-between">
   <Label for="platform">Platform</Label>
   <Select.Root id="platform" type="single" bind:value={exchangeFilter}>
     <Select.Trigger class="w-[200px]">{exchangeContent}</Select.Trigger>
-    <Select.Content class="bg-black">
+    <Select.Content>
       {#each exchanges as exchange}
-        <Select.Item value={exchange} class="bg-black" label={exchange}
-          >{exchange}</Select.Item
-        >
+        <Select.Item value={exchange} class="bg-black" label={exchange}>
+          {#snippet child({ props })}
+            <Button
+              {...props}
+              variant="ghost"
+              class="bg-black w-full justify-start">{exchange}</Button
+            >
+          {/snippet}
+        </Select.Item>
       {/each}
     </Select.Content>
   </Select.Root>
@@ -72,41 +68,49 @@
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
         {#if searchInput !== ""}
-          {#if symbolStore.isLoading}{:else}
-            {#each filteredSymbols as { symbol, exchange }}
-              <Popover.Close asChild>
-                <Button
-                  variant="outline"
-                  class="cursor-pointer w-full"
-                  onclick={() => {
-                    ticker = symbol;
-                    searchInput = symbol.toUpperCase();
-                  }}
-                  ><span>{symbol.toUpperCase()}</span>
-                </Button></Popover.Close
-              >
-            {/each}
-          {/if}
+          {#each filteredSymbols as { symbol, exchange }}
+            <Popover.Close asChild>
+              <Button
+                variant="outline"
+                class="cursor-pointer w-full"
+                onclick={() => {
+                  ticker = symbol;
+                  searchInput = symbol.toUpperCase();
+                }}
+                ><span>{symbol.toUpperCase()}</span>
+              </Button></Popover.Close
+            >
+          {/each}
         {/if}
       </Popover.Content>
     </Popover.Root>
   </div>
 </div>
-<div class="flex flex-row justify-between">
+<div class="flex justify-between">
   <Label for="histdata">Add Historical Data</Label>
   <Select.Root id="histdata" type="single" bind:value={loadHist}>
-    <Select.Trigger class="w-[200px]"
-      >{loadHist ? "Past Hour" : "None"}</Select.Trigger
-    >
+    <Select.Trigger class="w-[200px]">{loadHist ? "Yes" : "No"}</Select.Trigger>
     <Select.Content>
       <Select.Group>
-        <Select.Item value={false} label="None" class="bg-black" />
-        <Select.Item
-          value={true}
-          label="Past Hour"
-          class="bg-black"
-        /></Select.Group
-      ></Select.Content
-    >
+        <Select.Item value={false} label="No" class="bg-black">
+          {#snippet child({ props })}
+            <Button
+              {...props}
+              variant="ghost"
+              class="bg-black w-full justify-start">No</Button
+            >
+          {/snippet}
+        </Select.Item>
+        <Select.Item value={true} label="Yes" class="bg-black">
+          {#snippet child({ props })}
+            <Button
+              {...props}
+              variant="ghost"
+              class="bg-black w-full justify-start">Yes</Button
+            >
+          {/snippet}
+        </Select.Item>
+      </Select.Group>
+    </Select.Content>
   </Select.Root>
 </div>

@@ -24,5 +24,8 @@
     "build": "vite build",
     "preview": "vite preview"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "pixi.js": "^8.20.1"
+  }
 }

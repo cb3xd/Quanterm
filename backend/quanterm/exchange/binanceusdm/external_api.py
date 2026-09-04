@@ -2,11 +2,14 @@ from decimal import Decimal
 from typing import override
 
 import aiohttp
+from aiohttp.client_exceptions import ClientResponseError
+from fastapi import HTTPException
 import msgspec
 from msgspec.json import Encoder
 
 from quanterm import exchange
 from quanterm.external_api.base import BaseAPI
+from quanterm.fapi.utils import validate_symbol
 from quanterm.types import KlineIntervals
 
 
@@ -136,12 +139,15 @@ class BinanceAPI(BaseAPI):
 
     @override
     async def fetch_kline(self, symbol: str, interval: KlineIntervals):
-        params = {"symbol": symbol.upper(), "interval": interval}
+
+        params = {"symbol": symbol.replace("-", "").upper(), "interval": interval}
 
         session = await self._get_session()
         async with session.get(f"{self.url}/klines", params=params) as r:
-            r.raise_for_status()
-
+            try:
+                r.raise_for_status()
+            except Exception:
+                raise HTTPException(r.status, detail=f"Invalid Symbol: {symbol}")
             raw_bytes = await r.read()
             klines = self.kline_decoder.decode(raw_bytes)
             kline_dataset = {
@@ -153,13 +159,16 @@ class BinanceAPI(BaseAPI):
             return kline_dataset
 
     @override
-    async def fetch_price_change(self, symbol: str) -> msgspec.Struct:
-        params = {"symbol": symbol}
+    async def fetch_price_change(self, symbol: str):
+        params = {"symbol": symbol.replace("-", "").upper()}
 
         session = await self._get_session()
         async with session.get(f"{self.url}/ticker/24hr", params=params) as r:
-            r.raise_for_status()
-
+            try:
+                r.raise_for_status()
+            except Exception:
+                raise HTTPException(r.status, detail=f"Invalid Symbol: {symbol}")
             raw_bytes = await r.read()
+
             ticker_price_change = self.price_change_decoder.decode(raw_bytes)
             return ticker_price_change

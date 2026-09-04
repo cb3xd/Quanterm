@@ -3,10 +3,10 @@
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import AddChartPopup from "./AddChartPopup.svelte";
   import {
-    fetchKline,
     fetchSymbols,
     symbolStore,
     exchangesStore,
+    useKline,
   } from "$lib/components/api/apiDataStore.svelte";
   import {
     websocketStore,
@@ -54,7 +54,7 @@
           <Button
             onclick={() => {
               subscribe([`kline_stream.${ticker}.1m`], exchangeFilter);
-              if (loadHist) fetchKline(exchangeFilter, ticker, "1m");
+              if (loadHist) useKline(exchangeFilter, ticker, "1m");
             }}
             variant="outline"
             disabled={disableAdd}>Add</Button

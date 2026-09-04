@@ -10,14 +10,6 @@ let symbols = $state({
   error: ""
 })
 
-const MAX_KLINE_DATASETS = 20;
-let klines = $state({
-  data: {},
-  loading: true,
-  error: ""
-})
-
-
 export async function fetchApiData(dataEndpoint, params) {
   const response = await fetch(`http://localhost:8000/api/${dataEndpoint}?${params}`);
   if (!response.ok) throw new Error(`HTTP Error! status: ${response.status}`);
@@ -47,6 +39,7 @@ export async function fetchTickerPriceChange(symbol) {
     tickerPriceChange.loading = false;
   }
 }
+
 export async function fetchSymbols() {
   symbols.loading = true;
   try {
@@ -60,25 +53,28 @@ export async function fetchSymbols() {
   }
 }
 
-export async function fetchKline(exchangeId, symbol, interval,) {
-  const key = `${exchangeId}:${symbol}:${interval}`
-  klines.loading = true;
-  try {
-    const params = new URLSearchParams({ symbol: symbol, interval: interval })
-    const endpoint = `kline/${exchangeId}`
-    const result = await fetchApiData(endpoint, params);
-    const keys = Object.keys(klines.data);
-    if (keys.length >= MAX_KLINE_DATASETS && !klines.data[key]) {
-      delete klines.data[keys[0]];
-    }
-    klines.data[key] = result;
+function klineCacheKeygen(exchangeId, symbol, interval) {
+  return `${exchangeId}:${symbol}:${interval}`
+}
 
-    klines.error = "";
-  } catch (err) {
-    klines.error = `Failed to load klines for ${symbol}`;
-  } finally {
-    klines.loading = false;
-  }
+const klineCache = new Map();
+
+async function fetchKline(exchangeId, symbol, interval,) {
+  const key = klineCacheKeygen(exchangeId, symbol, interval);
+  const entry = { data: {}, loading: true, error: null, promise: null };
+  klineCache.set(key, entry);
+  const params = new URLSearchParams({ symbol: symbol, interval: interval })
+  const endpoint = `kline/${exchangeId}`
+  entry.promise = fetchApiData(endpoint, params)
+    .then(result => { entry.data = result; entry.loading = false; })
+    .catch(err => { entry.error = err; entry.loading = false; });
+}
+
+export function useKline(exchangeId, symbol, interval) {
+  const key = klineCacheKeygen(exchangeId, symbol, interval);
+  if (!klineCache.has(key)) fetchKline(exchangeId, symbol, interval);
+  const entry = $derived(klineCache.get(key));
+  return entry;
 }
 
 export const symbolStore = {
@@ -104,12 +100,6 @@ export const exchangesStore = {
 
 };
 
-export const klineStore = {
-  get current() { return klines.data },
-  get isLoading() { return klines.loading },
-  get error() { return klines.error },
-
-}
 
 export const tickerPriceChangeStore = {
   get current() { return tickerPriceChange.data },

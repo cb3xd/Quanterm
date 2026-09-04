@@ -32,7 +32,7 @@ Features:
 
 | Part                | What it does                                                                                                          |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| App.svelte          | Root component (Temporary MVP) - Fetches symbols from backend on mount, renders a searchable, scrollable symbol list. |
+| App.svelte          | Root component - just read the code bro |
 | dataStore.svelte.js | Reactive store that fetches GET /api/all_exchange_symbols and exposes data/loading/error states.                      |
 | UI components       | shadcn stuffs                                                                                                         |
 | Styling             | Dark/light CSS variables, JetBrains Mono, shadcn-svelte + tw-animate-css                                              |
@@ -44,7 +44,7 @@ The frontend is still in its early stage.
 | ----------------- | -------------------- | ----------------------------------------- |
 | Language          | Python 3.12+         | JavaScript (ES Modules) (Typescript soon) |
 | Framework         | FastAPI              | Svelte 5                                  |
-| Build             | Hachling / pip       | Vite 8                                    |
+| Build             | pip       | Vite 8                                    |
 | Styling           | -                    | Tailwind CSS + shadcn-svelte              |
 | Data Validation   | msgspec              | -                                         |
 | Exchange Protocol | aiohttp + websockets | -                                         |
@@ -75,7 +75,7 @@ Runs at `localhost:5173` (Vite default)
 
 **Performance**
 
-To make our beloved silicon chips dont explode, test with this script and monitor with task manager or btop/htop filtering for uvicorn.
+To make sure our beloved silicon chips dont explode, test with this script and monitor with task manager or btop/htop filtering for uvicorn.
 
 The script subscribes to all pairs available 
 ```bash

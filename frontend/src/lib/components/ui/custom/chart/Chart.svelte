@@ -25,14 +25,15 @@
     yAxisBar.cursor = "ns-resize";
     console.log(container.clientWidth - container.clientWidth / 24);
     const temp = new Text({
-      text: "Empty Chart",
+      text: "Press '+' to add a chart",
       style: {
         fontFamily: "Arial",
         fontSize: 48,
         fill: "#101010",
-        align: "center",
       },
     });
+    temp.anchor.set(0.5);
+    temp.position.set(container.clientWidth / 2, container.clientHeight / 2);
     app.stage.addChild(temp);
 
     app.stage.addChild(yAxisBar);

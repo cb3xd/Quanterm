@@ -1,34 +1,26 @@
-<script>
+<script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import * as PIXI from "pixi.js";
   import { Text } from "pixi.js";
 
-  // Scale math
-  // PixiJS
-  let container;
-  let app;
+  let container: HTMLDivElement;
+  let app: PIXI.Application;
+  let yAxisBar: PIXI.Graphics;
 
   onMount(async () => {
     app = new PIXI.Application();
-
     await app.init({
       background: "#000000",
-      resizeTo: document.getElementById("chart-container"),
+      resizeTo: container,
     });
-
     container.appendChild(app.canvas);
-    const yAxisBar = new PIXI.Graphics()
-      .rect(
-        app.screen.width -
-          document.getElementById("chart-container")?.clientWidth / 24,
-        0,
-        document.getElementById("chart-container")?.clientWidth / 24,
-        document.getElementById("chart-container")?.clientHeight,
-      )
+    yAxisBar = new PIXI.Graphics()
+      .rect(0, 0, container.clientWidth / 24, container.clientHeight)
       .fill("#101010");
+    yAxisBar.position.set(app.screen.width - container.clientWidth / 24, 0);
     yAxisBar.eventMode = "static";
     yAxisBar.cursor = "ns-resize";
-
+    console.log(app.screen.width - container.clientWidth / 24);
     const temp = new Text({
       text: "Empty Chart",
       style: {
@@ -42,15 +34,18 @@
 
     app.stage.addChild(yAxisBar);
   });
+  window.addEventListener("resize", handleResize);
+  function handleResize() {
+    console.log(container.clientHeight, container.clientWidth);
+    const newPos = container.clientWidth - container.clientWidth / 24;
+    console.log(newPos);
+    yAxisBar.position.set(newPos, 0);
+    yAxisBar.setSize(yAxisBar.width, container.clientHeight);
+  }
 
   onDestroy(() => {
     app?.destroy(true, { children: true });
   });
 </script>
 
-<div
-  bind:this={container}
-  style="cursor: crosshair;"
-  class="flex flex-1 flex-col"
-  id="chart-container"
-></div>
+<div bind:this={container} style="cursor: crosshair;" class="flex flex-1"></div>

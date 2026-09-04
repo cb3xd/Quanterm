@@ -18,7 +18,5 @@
 <div class="min-h-screen flex flex-col">
   <Topbar />
   <AddChartUI />
-  <div class="flex flex-1 flex-row">
-    <Chart />
-  </div>
+  <Chart />
 </div>

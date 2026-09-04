@@ -17,10 +17,13 @@
     yAxisBar = new PIXI.Graphics()
       .rect(0, 0, container.clientWidth / 24, container.clientHeight)
       .fill("#101010");
-    yAxisBar.position.set(app.screen.width - container.clientWidth / 24, 0);
+    yAxisBar.position.set(
+      container.clientWidth - container.clientWidth / 24,
+      0,
+    );
     yAxisBar.eventMode = "static";
     yAxisBar.cursor = "ns-resize";
-    console.log(app.screen.width - container.clientWidth / 24);
+    console.log(container.clientWidth - container.clientWidth / 24);
     const temp = new Text({
       text: "Empty Chart",
       style: {
@@ -48,4 +51,8 @@
   });
 </script>
 
-<div bind:this={container} style="cursor: crosshair;" class="flex flex-1"></div>
+<div
+  bind:this={container}
+  style="cursor: crosshair;"
+  class="relative w-full flex-1 min-h-0 overflow-hidden"
+></div>

@@ -15,7 +15,7 @@
   connect();
 </script>
 
-<div class="min-h-screen flex flex-col">
+<div class="h-screen flex flex-col">
   <Topbar />
   <AddChartUI />
   <Chart />

@@ -62,6 +62,7 @@ export class Wheel extends Action {
     if (this.options.interrupt) this.smoothing = null;
     return false;
   }
+
   private pinch(e: WheelEvent) {
     const point = this.chart.input.getPointerPosition(e);
     const step = (-e.deltaY * (e.deltaMode ? this.options.lineHeight : 1)) / 200;
@@ -99,7 +100,7 @@ export class Wheel extends Action {
 
       if (this.axis === 'all') { this.chart.scale.x *= change; this.chart.scale.y *= change; }
       else if (this.axis === 'x') this.chart.scale.x *= change;
-      else this.chart.scale.y += change;
+      else this.chart.scale.y *= change;
 
       this.chart.emit('zoomed', { chart: this.chart, type: 'wheel' });
 

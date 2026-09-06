@@ -2,10 +2,11 @@
   import { onDestroy, onMount } from "svelte";
   import { Chart } from "./Chart.ts";
   import * as PIXI from "pixi.js";
-
+  import { chartsStore } from "./chartsDataStore.svelte.js";
   let app: PIXI.Application;
   let chart: Chart;
   let container: HTMLDivElement;
+  let text: PIXI.Text;
   onMount(async () => {
     app = new PIXI.Application();
     await app.init({
@@ -23,10 +24,24 @@
 
     app.stage.addChild(chart);
     chart.drag().wheel();
-    const sprite = chart.addChild(new PIXI.Sprite(PIXI.Texture.WHITE));
-    sprite.tint = 0xff0000;
-    sprite.width = sprite.height = 100;
-    sprite.position.set(100, 100);
+
+    text = new PIXI.Text({
+      text: "Press '+' to add a chart",
+      style: {
+        fontFamily: "Arial",
+        fontSize: 48,
+        fill: "#101010",
+      },
+    });
+    text.anchor.set(0.5);
+    text.position.set(container.clientWidth / 2, container.clientHeight / 2);
+    app.ticker.add(() => {
+      text.text =
+        chartsStore.currentChart !== undefined
+          ? chartsStore.currentChart.ticker.toUpperCase()
+          : "Press '+' to add a chart";
+    });
+    app.stage.addChild(text);
   });
 </script>
 

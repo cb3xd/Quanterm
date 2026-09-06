@@ -1,4 +1,5 @@
 <script>
+  import { setContext } from "svelte";
   import Button from "$lib/components/ui/button/button.svelte";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import AddChartPopup from "./AddChartPopup.svelte";
@@ -6,18 +7,17 @@
     fetchSymbols,
     symbolStore,
     exchangesStore,
-    useKline,
   } from "$lib/components/api/apiDataStore.svelte";
   import {
-    websocketStore,
-    subscribe,
-    streamsStore,
-  } from "$lib/components/api/websocket.svelte";
+    chartsStore,
+    setCurrentChart,
+  } from "../chart/chartsDataStore.svelte";
+
   // On startup
   $effect(() => {
     fetchSymbols();
   });
-
+  let charts = $derived(chartsStore.charts);
   let exchanges = $derived(exchangesStore.current);
   let symbols = $derived(symbolStore.flattened);
   let exchangeFilter = $state("");
@@ -28,7 +28,12 @@
   );
 </script>
 
-<div class="flex flex-col min-w-screen items-start border-b-1">
+<div class="flex flex-row min-w-screen items-start border-b-1">
+  {#each charts.entries() as [key, chart]}<Button
+      class="border-0"
+      onclick={() => setCurrentChart(chart.ticker, chart.exchange)}
+      variant="outline">{chart.ticker.toUpperCase()}</Button
+    >{/each}
   <Dialog.Root class="w-fit">
     <Dialog.Trigger
       ><Button
@@ -53,8 +58,7 @@
         <Dialog.Close asChild>
           <Button
             onclick={() => {
-              subscribe([`kline_stream.${ticker}.1m`], exchangeFilter);
-              if (loadHist) useKline(exchangeFilter, ticker, "1m");
+              setCurrentChart(ticker, exchangeFilter, loadHist);
             }}
             variant="outline"
             disabled={disableAdd}>Add</Button

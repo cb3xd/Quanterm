@@ -2,11 +2,12 @@
   import { onMount, onDestroy } from "svelte";
   import * as PIXI from "pixi.js";
   import { Text } from "pixi.js";
-
+  import { chartsStore } from "./chartsDataStore.svelte";
   let container: HTMLDivElement;
   let app: PIXI.Application;
-  let yAxisBar: PIXI.Graphics;
 
+  let yAxisBar: PIXI.Graphics;
+  let txt: PIXI.Text;
   onMount(async () => {
     app = new PIXI.Application();
     await app.init({
@@ -24,7 +25,8 @@
     yAxisBar.eventMode = "static";
     yAxisBar.cursor = "ns-resize";
     console.log(container.clientWidth - container.clientWidth / 24);
-    const temp = new Text({
+
+    txt = new Text({
       text: "Press '+' to add a chart",
       style: {
         fontFamily: "Arial",
@@ -32,9 +34,17 @@
         fill: "#101010",
       },
     });
-    temp.anchor.set(0.5);
-    temp.position.set(container.clientWidth / 2, container.clientHeight / 2);
-    app.stage.addChild(temp);
+
+    app.ticker.add(updateText);
+    function updateText() {
+      txt.text =
+        chartsStore.currentChart !== undefined
+          ? chartsStore.currentChart.ticker.toUpperCase()
+          : "Press '+' to add a chart";
+    }
+    txt.anchor.set(0.5);
+    txt.position.set(container.clientWidth / 2, container.clientHeight / 2);
+    app.stage.addChild(txt);
 
     app.stage.addChild(yAxisBar);
   });

@@ -58,6 +58,7 @@ export class Chart extends Container {
     this.actions = new ActionManager(this);
     this.tickerFunction = () => this.update();
     this.options.ticker.add(this.tickerFunction);
+    this.lastChart = { x: this.x, y: this.y, scaleX: this.scale.x, scaleY: this.scale.y };
   }
   destroy(options?: DestroyOptions): void {
     if (this.tickerFunction) this.options.ticker.remove(this.tickerFunction);
@@ -77,8 +78,6 @@ export class Chart extends Container {
       this.zooming = false;
     }
 
-    this._hitAreaDefault = new Rectangle(this.left, this.top, this.graphScreenWidth, this.graphScreenHeight);
-    this.hitArea = this._hitAreaDefault;
 
     this._dirty =
       this._dirty ||

@@ -12,8 +12,6 @@ export interface IChartTransformState {
 }
 
 export interface IChartOptions {
-  maxWidth?: number | null;
-  maxHeight?: number | null;
   threshold?: number;
   ticker: Ticker;
   container: HTMLDivElement;
@@ -28,8 +26,6 @@ export interface ICompleteChartOptions extends IChartOptions {
 
 
 const DEFAULT_CHART_OPTIONS: Partial<ICompleteChartOptions> = {
-  maxWidth: null,
-  maxHeight: null,
   threshold: 1,
 }
 
@@ -57,8 +53,6 @@ export class Chart extends Container {
     this.screenWidth = this.options.container.clientWidth;
     this.screenHeight = this.options.container.clientHeight;
     this.threshold = this.options.threshold;
-    this._graphWidth = this.screenWidth * 9;
-    this._graphHeight = this.screenHeight * 16
     this.tickerFunction = () => this.update();
     this.input = new InputManager(this);
     this.actions = new ActionManager(this);
@@ -117,16 +111,11 @@ export class Chart extends Container {
   resize(
     screenWidth: number = this.options.container.clientWidth,
     screenHeight: number = this.options.container.clientHeight,
-    maxWidth?: number,
-    maxHeight?: number
 
   ): void {
     this.screenWidth = screenWidth;
     this.screenHeight = screenHeight;
 
-
-    if (typeof maxWidth !== 'undefined') this._graphWidth = maxWidth;
-    if (typeof maxHeight !== 'undefined') this._graphHeight = maxHeight;
     this.dirty = true;
   }
 
@@ -190,10 +179,6 @@ export class Chart extends Container {
     if (this._graphHeight) return this._graphHeight;
     return this.height / this.scale.y;
   }
-
-  set graphWidth(value: number) { this._graphWidth = value; }
-  set graphHeight(value: number) { this._graphHeight = value; }
-
   public getVisibleBounds(): Rectangle { return new Rectangle(this.left, this.top, this.graphScreenWidth, this.graphScreenHeight); }
   public toGraph<P extends PointData = Point>(x: number, y: number): P;
   public toGraph<P extends PointData = Point>(screenPoint: PointData): P;

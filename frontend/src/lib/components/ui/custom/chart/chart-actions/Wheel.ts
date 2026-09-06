@@ -37,6 +37,7 @@ export class Wheel extends Action {
     const targetParent = this.chart.parent || this.chart;
     targetParent.toLocal(oldPoint as PointData, this.chart, oldPoint);
     const comparePoint = targetParent.toLocal(point as PointData);
+    this.chart.x += comparePoint.x - (oldPoint as PointData).x;
     this.chart.y += comparePoint.y - (oldPoint as PointData).y;
     this.chart.emit('moved', { chart: this.chart, type: 'wheel' });
   }

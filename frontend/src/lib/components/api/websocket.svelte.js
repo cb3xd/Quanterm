@@ -19,7 +19,8 @@ export function connect() {
     const text = await e.data.text();
     const packet = JSON.parse(text); // Change these later on
 
-    packetBuffer.streams[packet.event_id] = packet
+    packetBuffer.streams[packet.event_id] = packet;
+    console.log(packetBuffer.streams);
   }
   websocket.connection.onclose = () => websocket.connected = false;
 }

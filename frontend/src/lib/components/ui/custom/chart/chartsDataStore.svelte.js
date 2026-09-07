@@ -11,7 +11,7 @@ function addChart(ticker, exchange, loadHist) {
     ticker: ticker,
     exchange: exchange,
     get stream() {
-      return streamsStore.streams[streamId];
+      return streamsStore.streams[`${exchange}.${streamId}`];
     },
     histData: loadHist ? useKline(exchange, ticker, "1m") : null
   };
@@ -29,5 +29,5 @@ export function setCurrentChart(ticker, exchange, loadHist) {
 export const chartsStore = {
   get charts() { return charts },
   get currentKey() { return currentKey },
-  get currentChart() { return charts.get(currentKey) }
+  get currentChart() { return charts.get(currentKey) },
 };

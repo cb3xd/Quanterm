@@ -12,12 +12,12 @@
   import AddChartUI from "$lib/components/ui/custom/topbar/AddChartUI.svelte";
   // import Chart from "$lib/components/ui/custom/chart/Chart.svelte";
   // import YAxisScrubber from "$lib/components/ui/custom/chart/YAxisScrubber.svelte";
-  import Chartv2 from "$lib/components/ui/custom/chart/Chartv2.svelte";
+  import Chart from "$lib/components/ui/custom/chart/Chart.svelte";
   connect();
 </script>
 
 <div class="h-screen flex flex-col">
   <Topbar />
   <AddChartUI />
-  <Chartv2 />
+  <Chart />
 </div>

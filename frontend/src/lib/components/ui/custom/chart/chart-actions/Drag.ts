@@ -49,7 +49,6 @@ export class Drag extends Action {
 
   public moveChart(event: FederatedPointerEvent): boolean {
     if (!(this.last && this.current === event.pointerId)) return false;
-
     if (event.pointerType === 'mouse' && !(event.buttons & 4)) {
       this.last = null;
       this.moved = false;

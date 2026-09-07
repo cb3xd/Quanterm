@@ -33,7 +33,7 @@
       style: {
         fontFamily: "Arial",
         fontSize: 48,
-        fill: "#FFFFFF",
+        fill: "#202020",
       },
     });
     text.anchor.set(0.5);
@@ -41,6 +41,7 @@
 
     app.stage.addChild(text);
     app.ticker.add(() => {
+      const graphPoint = chart.toGraph(chart.input.lastGlobalPointer);
       if (!chartsStore.currentChart) return;
       if (!chartsStore.currentChart.stream) return;
       text.text =
@@ -48,9 +49,13 @@
           ? chartsStore.currentChart.stream.close_price
           : "Press '+' to add a chart";
     });
-
+    const sprite = chart.addChild(new PIXI.Sprite(PIXI.Texture.WHITE));
+    sprite.tint = 0xff0000;
+    sprite.width = sprite.height = 100;
+    sprite.position.set(100, 100);
     app.stage.addChild(chart);
     chart.addChild(currentPriceLine);
+    chart.drag().wheel();
   });
 </script>
 

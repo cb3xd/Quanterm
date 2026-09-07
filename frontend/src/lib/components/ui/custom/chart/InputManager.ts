@@ -13,7 +13,7 @@ export class InputManager {
   public last?: Point | null;
   public wheelFunction?: (e: WheelEvent) => void;
   public touches: IChartTouch[];
-
+  public lastGlobalPointer: Point = new Point();
   constructor(chart: Chart) {
     this.chart = chart;
     this.touches = [];
@@ -29,7 +29,6 @@ export class InputManager {
     this.chart.hitArea = new Rectangle(-1e7, -1e7, 2e7, 2e7);
     this.chart.on('globalpointermove', this.moveChart, this);
     this.chart.on('pointerdown', this.handlePointerDown, this);
-    this.chart.on('pointermove', this.moveChart, this);
     this.chart.on('pointerup', this.handlePointerUp, this);
     this.wheelFunction = (e) => this.handleWheel(e);
     this.chart.options.events.domElement.addEventListener(
@@ -57,6 +56,7 @@ export class InputManager {
   }
 
   public moveChart(event: FederatedPointerEvent): void {
+    this.lastGlobalPointer.copyFrom(event.global);
     if (!this.chart.visible) return;
     this.chart.actions.moveChart(event);
     if (this.clickedAvailable && this.last) {
@@ -86,10 +86,12 @@ export class InputManager {
     }
   }
 
-  public getPointerPosition(event: WheelEvent): Point {
+  public getPointerPosition(event: WheelEvent): Point;
+  public getPointerPosition(event: MouseEvent | PointerEvent): Point;
+  public getPointerPosition(event: WheelEvent | MouseEvent | PointerEvent): Point {
     const point = new Point();
     this.chart.options.events.mapPositionToPoint(point, event.clientX, event.clientY);
-    return point
+    return point;
   }
 
   public handleWheel(event: WheelEvent): void {

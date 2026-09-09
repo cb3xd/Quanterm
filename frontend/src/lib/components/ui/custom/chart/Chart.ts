@@ -63,6 +63,7 @@ export class Chart extends Container {
     this.bottom = 0;
     this.left = 0;
     window.addEventListener('resize', () => this.resize());
+    this.scale.x = this.scale.y = 30;
   }
 
   destroy(options?: DestroyOptions): void {

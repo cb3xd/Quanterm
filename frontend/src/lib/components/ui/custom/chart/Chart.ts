@@ -59,7 +59,8 @@ export class Chart extends Container {
     this.tickerFunction = () => this.update();
     this.options.ticker.add(this.tickerFunction);
     this.lastChart = { x: this.x, y: this.y, scaleX: this.scale.x, scaleY: this.scale.y };
-    this._graphHeight = 500000.0;
+    this._graphHeight = 2e7;
+    this._graphWidth = 2e7;
   }
 
   destroy(options?: DestroyOptions): void {

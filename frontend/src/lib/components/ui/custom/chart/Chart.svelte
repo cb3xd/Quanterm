@@ -42,7 +42,7 @@
     app.stage.addChild(text);
     app.ticker.add(() => {
       const graphPoint = chart.toGraph(chart.input.lastGlobalPointer);
-      console.log(graphPoint.x, graphPoint.y);
+      console.log(graphPoint.x, graphPoint.y * -1);
       if (!chartsStore.currentChart) return;
       if (!chartsStore.currentChart.stream) return;
       text.text =
@@ -53,10 +53,17 @@
     const sprite = chart.addChild(new PIXI.Sprite(PIXI.Texture.WHITE));
     sprite.tint = 0xff0000;
     sprite.width = sprite.height = 10;
-    sprite.position.set(-5, -5);
+    sprite.position.set(0, 0);
+
+    const sprite2 = chart.addChild(new PIXI.Sprite(PIXI.Texture.WHITE));
+    sprite2.tint = 0xff0000;
+    sprite2.width = sprite2.height = 10;
+    sprite2.position.set(200, 0);
+
     app.stage.addChild(chart);
-    chart.addChild(currentPriceLine);
-    chart.drag().wheel().clamp();
+    // chart.addChild(currentPriceLine);
+
+    chart.drag().wheel();
   });
 </script>
 

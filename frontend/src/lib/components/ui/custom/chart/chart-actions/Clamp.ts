@@ -2,8 +2,6 @@ import { Point } from "pixi.js";
 import { Chart } from "../Chart.ts";
 import { Action } from "./Action.ts";
 
-
-
 export interface IClampOptions {
   left?: number | boolean | null;
   top?: number | boolean | null;
@@ -19,7 +17,7 @@ const DEFAULT_CLAMP_OPTIONS: Required<IClampOptions> = {
   top: 0,
   bottom: null,
   direction: null,
-}
+};
 
 export class Clamp extends Action {
   public readonly options: Required<IClampOptions>;
@@ -65,10 +63,9 @@ export class Clamp extends Action {
     }
 
     const original = new Point(this.chart.x, this.chart.y);
-    const decelerate = this.getDeceleratePlugin();
 
-    this.clampHorizontal(original, decelerate);
-    this.clampVertical(original, decelerate);
+    this.clampHorizontal(original);
+    this.clampVertical(original);
 
     this.updateLastState();
   }
@@ -82,11 +79,7 @@ export class Clamp extends Action {
     );
   }
 
-  private getDeceleratePlugin(): any {
-    return (this.chart.actions as any).decelerate || {};
-  }
-
-  private clampHorizontal(original: Point, decelerate: any): void {
+  private clampHorizontal(original: Point): void {
     if (this.options.left === null && this.options.right === null) {
       return;
     }
@@ -94,11 +87,11 @@ export class Clamp extends Action {
     let moved = false;
 
     if (this.options.left !== null) {
-      moved = this.clampLeftBound(decelerate) || moved;
+      moved = this.clampLeftBound() || moved;
     }
 
     if (this.options.right !== null) {
-      moved = this.clampRightBound(decelerate) || moved;
+      moved = this.clampRightBound() || moved;
     }
 
     if (moved) {
@@ -106,7 +99,7 @@ export class Clamp extends Action {
     }
   }
 
-  private clampVertical(original: Point, decelerate: any): void {
+  private clampVertical(original: Point): void {
     if (this.options.top === null && this.options.bottom === null) {
       return;
     }
@@ -114,11 +107,11 @@ export class Clamp extends Action {
     let moved = false;
 
     if (this.options.top !== null) {
-      moved = this.clampTopBound(decelerate) || moved;
+      moved = this.clampTopBound() || moved;
     }
 
     if (this.options.bottom !== null) {
-      moved = this.clampBottomBound(decelerate) || moved;
+      moved = this.clampBottomBound() || moved;
     }
 
     if (moved) {
@@ -126,52 +119,48 @@ export class Clamp extends Action {
     }
   }
 
-  private clampLeftBound(decelerate: any): boolean {
+  private clampLeftBound(): boolean {
     const leftBound = this.options.left === true ? 0 : (this.options.left as number);
 
     if (this.chart.left < leftBound) {
       this.chart.x = -leftBound * this.chart.scale.x;
-      decelerate.x = 0;
       return true;
     }
 
     return false;
   }
 
-  private clampRightBound(decelerate: any): boolean {
+  private clampRightBound(): boolean {
     const rightBound = this.options.right === true
       ? this.chart.graphWidth
       : (this.options.right as number);
 
     if (this.chart.right > rightBound) {
       this.chart.x = -rightBound * this.chart.scale.x + this.chart.screenWidth;
-      decelerate.x = 0;
       return true;
     }
 
     return false;
   }
 
-  private clampTopBound(decelerate: any): boolean {
+  private clampTopBound(): boolean {
     const topBound = this.options.top === true ? 0 : (this.options.top as number);
 
     if (this.chart.top < topBound) {
       this.chart.y = -topBound * this.chart.scale.y;
-      decelerate.y = 0;
       return true;
     }
 
     return false;
   }
 
-  private clampBottomBound(decelerate: any): boolean {
+  private clampBottomBound(): boolean {
     const bottomBound = this.options.bottom === true
       ? this.chart.graphHeight
       : (this.options.bottom as number);
 
     if (this.chart.bottom > bottomBound) {
       this.chart.y = -bottomBound * this.chart.scale.y + this.chart.screenHeight;
-      decelerate.y = 0;
       return true;
     }
 

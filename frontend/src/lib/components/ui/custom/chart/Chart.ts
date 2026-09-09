@@ -3,7 +3,6 @@ import { InputManager } from "./InputManager.ts";
 import { ActionManager } from "./ActionManager.ts";
 import { Drag, type IDragOptions } from "./chart-actions/Drag.ts";
 import { Wheel, type IWheelOptions } from "./chart-actions/Wheel.ts";
-import { Clamp, IClampOptions } from "./chart-actions/Clamp.ts";
 
 export interface IChartTransformState {
   x: number;
@@ -61,6 +60,9 @@ export class Chart extends Container {
     this.lastChart = { x: this.x, y: this.y, scaleX: this.scale.x, scaleY: this.scale.y };
     this._graphHeight = 2e7;
     this._graphWidth = 2e7;
+    this.bottom = 0;
+    this.left = 0;
+    window.addEventListener('resize', () => this.resize());
   }
 
   destroy(options?: DestroyOptions): void {
@@ -97,6 +99,7 @@ export class Chart extends Container {
       scaleY: this.scale.y
     };
 
+
     this.emit('frame-end', this);
   }
 
@@ -110,10 +113,6 @@ export class Chart extends Container {
     return this;
   }
 
-  public clamp(options?: IClampOptions): Chart {
-    this.actions.add('clamp', new Clamp(this, options));
-    return this;
-  }
   resize(
     screenWidth: number = this.options.container.clientWidth,
     screenHeight: number = this.options.container.clientHeight,
@@ -140,7 +139,7 @@ export class Chart extends Container {
     }
 
     const newX = ((this.graphScreenWidth / 2) - x) * this.scale.x;
-    const newY = ((this.graphScreenWidth / 2) - y) * this.scale.y;
+    const newY = ((this.graphScreenHeight / 2) - y) * this.scale.y;
 
     if (!(this.x !== newX || this.y !== newY)) return this;
 

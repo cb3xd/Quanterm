@@ -56,7 +56,7 @@ export class ActionManager {
     return this.actions[name] as T;
   }
   public reset(): void {
-    this.list.forEach((action) => { action.destroy(); })
+    this.list.forEach((action) => { action.reset(); })
   }
   public sort() {
     this.list = [];

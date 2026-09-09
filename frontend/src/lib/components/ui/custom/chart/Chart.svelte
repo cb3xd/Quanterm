@@ -8,6 +8,9 @@
   let chart: Chart;
   let container: HTMLDivElement;
   let text: PIXI.Text;
+  let coordinateText: PIXI.Text;
+  let xLine: PIXI.Graphics;
+  let yLine: PIXI.Graphics;
   let currentPriceLine = new PIXI.Graphics().stroke({
     color: 0xff0000,
     pixelLine: true,
@@ -33,16 +36,43 @@
       style: {
         fontFamily: "Arial",
         fontSize: 48,
-        fill: "#FFFFFF",
+        fill: "#202020",
       },
     });
+
+    coordinateText = new PIXI.Text({
+      text: "0, 0",
+      style: {
+        fontFamily: "Arial",
+        fontSize: 12,
+        fill: "#606060",
+      },
+    });
+
+    xLine = new PIXI.Graphics()
+      .moveTo(0, -app.canvas.clientHeight)
+      .lineTo(0, app.canvas.clientHeight)
+      .stroke({ color: "#202020", pixelLine: true });
+
+    yLine = new PIXI.Graphics()
+      .moveTo(-app.canvas.clientWidth, 0)
+      .lineTo(app.canvas.clientWidth, 0)
+      .stroke({ color: "#202020", pixelLine: true });
     text.anchor.set(0.5);
     text.position.set(container.clientWidth / 2, container.clientHeight / 2);
-
+    coordinateText.position.set(10, 10);
     app.stage.addChild(text);
+    app.stage.addChild(coordinateText);
     app.ticker.add(() => {
-      const graphPoint = chart.toGraph(chart.input.lastGlobalPointer);
-      console.log(graphPoint.x, graphPoint.y * -1);
+      const screenPoint = chart.input.lastGlobalPointer;
+      const graphPoint = chart.toGraph(screenPoint);
+      coordinateText.text = `(${Math.round(graphPoint.x)},${Math.round(graphPoint.y * -1)})`;
+      xLine.position.set(
+        chart.toGlobal(new PIXI.Point(Math.round(graphPoint.x), graphPoint.y))
+          .x,
+        screenPoint.y,
+      );
+      yLine.position.set(0, screenPoint.y);
       if (!chartsStore.currentChart) return;
       if (!chartsStore.currentChart.stream) return;
       text.text =
@@ -50,19 +80,18 @@
           ? chartsStore.currentChart.stream.close_price
           : "Press '+' to add a chart";
     });
-    const sprite = chart.addChild(new PIXI.Sprite(PIXI.Texture.WHITE));
-    sprite.tint = 0xff0000;
-    sprite.width = sprite.height = 10;
-    sprite.position.set(0, 0);
 
-    const sprite2 = chart.addChild(new PIXI.Sprite(PIXI.Texture.WHITE));
-    sprite2.tint = 0xff0000;
-    sprite2.width = sprite2.height = 10;
-    sprite2.position.set(200, 0);
-
+    const graphics = new PIXI.Graphics()
+      .rect(50, 50, 100, 100)
+      .fill(0xff0000)
+      .circle(200, 200, 50)
+      .stroke(0x00ff00)
+      .lineStyle(5)
+      .moveTo(300, 300)
+      .lineTo(400, 400);
     app.stage.addChild(chart);
-    // chart.addChild(currentPriceLine);
-
+    app.stage.addChild(xLine, yLine);
+    chart.addChild(graphics);
     chart.drag().wheel();
   });
 </script>

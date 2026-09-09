@@ -3,6 +3,7 @@ import { InputManager } from "./InputManager.ts";
 import { ActionManager } from "./ActionManager.ts";
 import { Drag, type IDragOptions } from "./chart-actions/Drag.ts";
 import { Wheel, type IWheelOptions } from "./chart-actions/Wheel.ts";
+import { Clamp, IClampOptions } from "./chart-actions/Clamp.ts";
 
 export interface IChartTransformState {
   x: number;
@@ -43,7 +44,6 @@ export class Chart extends Container {
   public readonly options: ICompleteChartOptions;
   private _graphWidth?: number | null;
   private _graphHeight?: number | null;
-  private _hitAreaDefault?: Rectangle;
   private _dirty?: boolean;
 
   private readonly tickerFunction?: () => void;
@@ -59,7 +59,9 @@ export class Chart extends Container {
     this.tickerFunction = () => this.update();
     this.options.ticker.add(this.tickerFunction);
     this.lastChart = { x: this.x, y: this.y, scaleX: this.scale.x, scaleY: this.scale.y };
+    this._graphHeight = 500000.0;
   }
+
   destroy(options?: DestroyOptions): void {
     if (this.tickerFunction) this.options.ticker.remove(this.tickerFunction);
     this.input.destroy();
@@ -107,6 +109,10 @@ export class Chart extends Container {
     return this;
   }
 
+  public clamp(options?: IClampOptions): Chart {
+    this.actions.add('clamp', new Clamp(this, options));
+    return this;
+  }
   resize(
     screenWidth: number = this.options.container.clientWidth,
     screenHeight: number = this.options.container.clientHeight,
@@ -183,8 +189,8 @@ export class Chart extends Container {
   public toGraph<P extends PointData = Point>(screenPoint: PointData): P;
 
   public toGraph<P extends PointData = Point>(x: number | PointData, y?: number): P {
-    if (arguments.length === 2) return this.toGlobal<P>(new Point(x as number, y))
-    return this.toGlobal<P>(x as PointData);
+    if (arguments.length === 2) return this.toLocal<P>(new Point(x as number, y))
+    return this.toLocal<P>(x as PointData);
   }
 
   get graphScreenWidth(): number { return this.screenWidth / this.scale.x; }

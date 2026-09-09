@@ -33,7 +33,7 @@
       style: {
         fontFamily: "Arial",
         fontSize: 48,
-        fill: "#202020",
+        fill: "#FFFFFF",
       },
     });
     text.anchor.set(0.5);
@@ -42,6 +42,7 @@
     app.stage.addChild(text);
     app.ticker.add(() => {
       const graphPoint = chart.toGraph(chart.input.lastGlobalPointer);
+      console.log(graphPoint.x, graphPoint.y);
       if (!chartsStore.currentChart) return;
       if (!chartsStore.currentChart.stream) return;
       text.text =
@@ -51,11 +52,11 @@
     });
     const sprite = chart.addChild(new PIXI.Sprite(PIXI.Texture.WHITE));
     sprite.tint = 0xff0000;
-    sprite.width = sprite.height = 100;
-    sprite.position.set(100, 100);
+    sprite.width = sprite.height = 10;
+    sprite.position.set(-5, -5);
     app.stage.addChild(chart);
     chart.addChild(currentPriceLine);
-    chart.drag().wheel();
+    chart.drag().wheel().clamp();
   });
 </script>
 

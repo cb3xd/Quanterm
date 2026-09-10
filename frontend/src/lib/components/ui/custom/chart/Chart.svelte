@@ -4,6 +4,12 @@
   import * as PIXI from "pixi.js";
   import { chartsStore, setCurrentChart } from "./chartsDataStore.svelte.js";
 
+  function countDecimals(num: number): number {
+    if (Math.floor(num.valueOf()) === num.valueOf()) return 0;
+    return num.toString().split(".")[1].length || 0;
+  }
+
+  let precision = 2;
   let app: PIXI.Application;
   let chart: Chart;
   let container: HTMLDivElement;
@@ -13,6 +19,36 @@
   let xLine: PIXI.Graphics;
   let yLine: PIXI.Graphics;
   let priceLabel: PIXI.Text;
+
+  function tickerCallback() {
+    const screenPoint = chart.input.lastGlobalPointer;
+    const graphPoint = chart.toGraph(screenPoint);
+    coordinateText.text = `(${Math.round(graphPoint.x)}, ${(graphPoint.y * -1).toFixed(precision)})`;
+    xLine.position.set(
+      chart.toGlobal(new PIXI.Point(Math.round(graphPoint.x), graphPoint.y)).x,
+      screenPoint.y,
+    );
+    yLine.position.set(0, screenPoint.y);
+    if (!chartsStore.currentChart) return;
+    if (!chartsStore.currentChart.stream) return;
+    text.text =
+      chartsStore.currentChart !== undefined
+        ? chartsStore.currentChart.ticker.toUpperCase()
+        : "Press '+' to add a chart";
+    const currPrice = chartsStore.currentChart.stream.close_price;
+    precision = countDecimals(currPrice);
+    currentPriceLine.stroke({
+      color: "#303030",
+      pixelLine: true,
+    });
+    currentPriceLine.position.y = chart.toGlobal(
+      new PIXI.Point(0, -1 * currPrice),
+    ).y;
+    priceLabel.position.y = chart.toGlobal(new PIXI.Point(0, -1 * currPrice)).y;
+    priceLabel.text = `${currPrice}`;
+    priceLabel.position.x = app.canvas.width - priceLabel.width;
+  }
+
   onMount(async () => {
     app = new PIXI.Application();
     await app.init({
@@ -79,44 +115,16 @@
     app.stage.addChild(text);
     app.stage.addChild(coordinateText);
     app.stage.addChild(priceLabel);
-    app.ticker.add(() => {
-      const screenPoint = chart.input.lastGlobalPointer;
-      const graphPoint = chart.toGraph(screenPoint);
-      coordinateText.text = `(${Math.round(graphPoint.x)},${Math.round(graphPoint.y * -1)})`;
-      xLine.position.set(
-        chart.toGlobal(new PIXI.Point(Math.round(graphPoint.x), graphPoint.y))
-          .x,
-        screenPoint.y,
-      );
-      yLine.position.set(0, screenPoint.y);
-      if (!chartsStore.currentChart) return;
-      if (!chartsStore.currentChart.stream) return;
-      text.text =
-        chartsStore.currentChart !== undefined
-          ? chartsStore.currentChart.ticker.toUpperCase()
-          : "Press '+' to add a chart";
-      const currPrice = chartsStore.currentChart.stream.close_price;
-      currentPriceLine.stroke({
-        color: "#303030",
-        pixelLine: true,
-      });
-      currentPriceLine.position.y = chart.toGlobal(
-        new PIXI.Point(0, -1 * currPrice),
-      ).y;
-      priceLabel.position.y = chart.toGlobal(
-        new PIXI.Point(0, -1 * currPrice),
-      ).y;
-      priceLabel.text = `${currPrice}`;
-      priceLabel.position.x = container.clientWidth - priceLabel.width;
-    });
-
+    app.ticker.add(tickerCallback);
     app.stage.addChild(chart);
     app.stage.addChild(xLine, yLine, currentPriceLine);
     chart.drag().wheel();
   });
-
+  30;
   onDestroy(() => {
-    app.destroy();
+    app?.ticker.remove(tickerCallback);
+    chart?.destroy();
+    app?.destroy(true, { children: true });
   });
 </script>
 

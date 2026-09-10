@@ -16,7 +16,7 @@ const DEFAULT_WHEEL_OPTIONS: Required<IWheelOptions> = {
   smooth: false,
   interrupt: true,
   lineHeight: 20,
-  axis: 'all',
+  axis: 'x',
   wheelZoom: true,
 }
 

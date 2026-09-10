@@ -44,7 +44,7 @@ export class Chart extends Container {
   private _graphWidth?: number | null;
   private _graphHeight?: number | null;
   private _dirty?: boolean;
-
+  private readonly resizeHandler = () => this.resize();
   private readonly tickerFunction?: () => void;
   constructor(options: IChartOptions) {
     super();
@@ -62,13 +62,16 @@ export class Chart extends Container {
     this._graphWidth = 2e7;
     this.bottom = 0;
     this.left = 0;
-    window.addEventListener('resize', () => this.resize());
     this.scale.x = this.scale.y = 30;
+    this.x = 0;
+    this.y -= this.screenHeight / 2;
+    window.addEventListener('resize', this.resizeHandler);
   }
 
   destroy(options?: DestroyOptions): void {
     if (this.tickerFunction) this.options.ticker.remove(this.tickerFunction);
     this.input.destroy();
+    window.removeEventListener('resize', this.resizeHandler);
     super.destroy(options);
   }
   update(): void {

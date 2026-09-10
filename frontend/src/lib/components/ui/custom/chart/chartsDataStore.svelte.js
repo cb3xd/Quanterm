@@ -15,8 +15,6 @@ function addChart(ticker, exchange, loadHist) {
     },
     histData: loadHist ? useKline(exchange, ticker, "1m") : null
   };
-  console.log(entry);
-  console.log(charts)
   charts.set(`${ticker}.${exchange}`, entry);
 }
 

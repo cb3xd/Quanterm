@@ -16,16 +16,13 @@ const DEFAULT_WHEEL_OPTIONS: Required<IWheelOptions> = {
   smooth: false,
   interrupt: true,
   lineHeight: 20,
-  axis: 'x',
+  axis: 'all',
   wheelZoom: true,
 }
 
 export class Wheel extends Action {
   public readonly options: Required<IWheelOptions>;
 
-  protected smoothing?: PointData | null;
-  protected smoothingCenter?: Point | null;
-  protected smoothingCount?: number;
   protected axis: string;
   constructor(chart: Chart, options: IWheelOptions = {}) {
     super(chart);
@@ -41,25 +38,8 @@ export class Wheel extends Action {
     this.chart.y += comparePoint.y - (oldPoint as PointData).y;
     this.chart.emit('moved', { chart: this.chart, type: 'wheel' });
   }
-  public update(): void {
-    if (!this.smoothing) return;
-    const point = this.smoothingCenter;
-    const change = this.smoothing;
-    const oldPoint = this.chart.toLocal(point as PointData);;
-
-    if (this.axis === 'all') { this.chart.scale.x += change.x; this.chart.scale.y += change.y; }
-    else if (this.axis === 'x') this.chart.scale.x += change.x;
-    else this.chart.scale.y += change.y;
-
-    this.chart.emit('zoomed', { chart: this.chart, type: 'wheel' });
-    (this.smoothingCount as number)++;
-    if (typeof this.options.smooth === 'number' && (this.smoothingCount as number) >= this.options.smooth) this.smoothing = null;
-
-    this.adjustChartForZoom(oldPoint, point as PointData);
-  }
 
   public handlePointerDown(): boolean {
-    if (this.options.interrupt) this.smoothing = null;
     return false;
   }
 
@@ -87,26 +67,17 @@ export class Wheel extends Action {
     const step = (-e.deltaY * (e.deltaMode ? this.options.lineHeight : 1)) / 500;
     const change = Math.pow(2, (1 + this.options.percent) * step);
 
-    if (this.options.smooth) {
-      const x = this.smoothing ? this.smoothing.x * (this.options.smooth - (this.smoothingCount as number)) : 0
-      const y = this.smoothing ? this.smoothing.y * (this.options.smooth - (this.smoothingCount as number)) : 0
-      const original = { x: x, y: y };
-      const smoothingX = ((this.chart.scale.x + original.x) * change - this.chart.scale.x) / this.options.smooth;
-      const smoothingY = ((this.chart.scale.y + original.y) * change - this.chart.scale.y) / this.options.smooth;
-      this.smoothing = { x: smoothingX, y: smoothingY };
-    }
-    else {
-      const oldPoint = this.chart.toLocal(point);
+    const oldPoint = this.chart.toLocal(point);
 
-      if (this.axis === 'all') { this.chart.scale.x *= change; this.chart.scale.y *= change; }
-      else if (this.axis === 'x') this.chart.scale.x *= change;
-      else this.chart.scale.y *= change;
+    if (this.axis === 'all') { this.chart.scale.x *= change; this.chart.scale.y *= change; }
+    else if (this.axis === 'x') this.chart.scale.x *= change;
+    else this.chart.scale.y *= change;
 
-      this.chart.emit('zoomed', { chart: this.chart, type: 'wheel' });
+    this.chart.emit('zoomed', { chart: this.chart, type: 'wheel' });
 
-      this.adjustChartForZoom(oldPoint, point as PointData);
+    this.adjustChartForZoom(oldPoint, point as PointData);
 
-    }
+
     return true;
 
   }

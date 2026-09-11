@@ -2,32 +2,38 @@ import { useKline } from "$lib/components/api/apiDataStore.svelte.ts";
 import { streamsStore, subscribe } from "$lib/components/api/websocket.svelte.ts";
 import { SvelteMap } from "svelte/reactivity";
 
+export interface ITicker {
+  symbol: string,
+  exchange: string,
+}
 
-interface TickerEntry {
-  ticker: string,
+interface ITickerEntry {
+  symbol: string,
   exchange: string,
   readonly stream: any,
   histData: unknown | null;
 }
-const tickers: SvelteMap<string, TickerEntry> = new SvelteMap();
+
+const tickers: SvelteMap<string, ITickerEntry> = new SvelteMap();
 let currentKey: string = $state("");
-function addTicker(ticker: string, exchange: string, loadHist: boolean) {
-  const streamId = `kline_stream.${ticker}.1m`;
-  subscribe([streamId], exchange);
-  const entry: TickerEntry = {
-    ticker: ticker,
-    exchange: exchange,
+
+function addTicker(ticker: ITicker, loadHist: boolean) {
+  const streamId = `kline_stream.${ticker.symbol}.1m`;
+  subscribe([streamId], ticker.exchange);
+  const entry: ITickerEntry = {
+    symbol: ticker.symbol,
+    exchange: ticker.exchange,
     get stream() {
-      return streamsStore.streams[`${exchange}.${streamId}`];
+      return streamsStore.streams[`${ticker.exchange}.${streamId}`];
     },
-    histData: loadHist ? useKline(exchange, ticker, "1m") : null
+    histData: loadHist ? useKline(ticker.exchange, ticker.symbol, "1m") : null
   };
-  tickers.set(`${ticker}.${exchange}`, entry);
+  tickers.set(`${ticker.symbol}.${ticker.exchange}`, entry);
 }
 
-export function setCurrentTicker(ticker: string, exchange: string, loadHist: boolean) {
-  const key = `${ticker}.${exchange}`;
-  if (!tickers.has(key)) addTicker(ticker, exchange, loadHist);
+export function setCurrentTicker(ticker: ITicker, loadHist: boolean) {
+  const key = `${ticker.symbol}.${ticker.exchange}`;
+  if (!tickers.has(key)) addTicker(ticker, loadHist);
   currentKey = key;
 }
 

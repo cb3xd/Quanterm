@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { setContext } from "svelte";
   import Button from "$lib/components/ui/button/button.svelte";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
@@ -21,25 +21,29 @@
   let exchanges = $derived(exchangesStore.current);
   let symbols = $derived(symbolStore.flattened);
   let exchangeFilter = $state("");
-  let ticker = $state("");
+  let symbolStr = $state("");
   let loadHist = $state(false);
   let disableAdd = $derived(
-    exchangeFilter == "" || ticker == "" ? true : false,
+    exchangeFilter == "" || symbolStr == "" ? true : false,
   );
 </script>
 
 <div class="flex flex-row min-w-screen items-start border-b-1">
   {#each charts.entries() as [key, chart]}<Button
       class="border-0"
-      onclick={() => setCurrentTicker(chart.ticker, chart.exchange, false)}
-      variant="outline">{chart.ticker.toUpperCase()}</Button
+      onclick={() =>
+        setCurrentTicker(
+          { symbol: chart.symbol, exchange: chart.exchange },
+          false,
+        )}
+      variant="outline">{chart.symbol.toUpperCase()}</Button
     >{/each}
   <Dialog.Root class="w-fit">
     <Dialog.Trigger
       ><Button
         onclick={() => {
           exchangeFilter = "";
-          ticker = "";
+          symbolStr = "";
           loadHist = false;
         }}
         variant="outline"
@@ -51,14 +55,17 @@
         bind:exchanges
         bind:exchangeFilter
         bind:symbols
-        bind:ticker
         bind:loadHist
+        bind:symbolStr
       />
       <Dialog.Footer>
         <Dialog.Close asChild>
           <Button
             onclick={() => {
-              setCurrentTicker(ticker, exchangeFilter, loadHist);
+              setCurrentTicker(
+                { symbol: symbolStr, exchange: exchangeFilter },
+                loadHist,
+              );
             }}
             variant="outline"
             disabled={disableAdd}>Add</Button

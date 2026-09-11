@@ -8,7 +8,7 @@
     exchanges = $bindable(),
     exchangeFilter = $bindable(),
     symbols = $bindable(),
-    ticker = $bindable(),
+    symbolStr = $bindable(),
     loadHist = $bindable(),
   } = $props();
   let exchangeContent = $derived(
@@ -74,7 +74,7 @@
                 variant="outline"
                 class="cursor-pointer w-full"
                 onclick={() => {
-                  ticker = symbol;
+                  symbolStr = symbol;
                   searchInput = symbol.toUpperCase();
                 }}
                 ><span>{symbol.toUpperCase()}</span>

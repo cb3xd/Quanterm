@@ -33,7 +33,7 @@
     if (!tickersStore.currentTicker.stream) return;
     text.text =
       tickersStore.currentTicker !== undefined
-        ? tickersStore.currentTicker.ticker.toUpperCase()
+        ? tickersStore.currentTicker.symbol.toUpperCase()
         : "Press '+' to add a chart";
     const currPrice = tickersStore.currentTicker.stream.close_price;
     precision = countDecimals(currPrice);

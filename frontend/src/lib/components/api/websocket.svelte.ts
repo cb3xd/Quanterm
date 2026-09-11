@@ -33,11 +33,11 @@ export function disconnect() {
   websocket.connection?.close();
 }
 
-export function subscribe(events: Array<string>, exchange: string) {
+export function subscribe(events: string[], exchange: string) {
   if (websocket.connection === null) return;
 
   const packet = JSON.stringify({ method: "sub", events, exchange });
-
+  console.log(packet);
   websocket.connection.send(new TextEncoder().encode(packet));
 }
 

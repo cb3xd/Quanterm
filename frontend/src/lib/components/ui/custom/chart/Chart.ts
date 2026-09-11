@@ -69,7 +69,6 @@ export class Chart extends Container {
     this.x = 0;
     this.y -= this.screenHeight / 2;
     window.addEventListener('resize', this.resizeHandler);
-
     this.priceScale = new PriceScale({ autoScale: false, mode: PriceScaleMode.Normal });
   }
 
@@ -206,6 +205,13 @@ export class Chart extends Container {
     return this.toLocal<P>(x as PointData);
   }
 
+  public toScreen<P extends PointData = Point>(x: number, y: number): P;
+  public toScreen<P extends PointData = Point>(worldPoint: PointData): P;
+  public toScreen<P extends PointData = Point>(x: number | PointData, y?: number): P {
+    if (arguments.length === 2) return this.toGlobal<P>(new Point(x as number, y));
+    return this.toGlobal<P>(x as PointData);
+
+  }
   get graphScreenWidth(): number { return this.screenWidth / this.scale.x; }
   get graphScreenHeight(): number { return this.screenHeight / this.scale.y; }
 

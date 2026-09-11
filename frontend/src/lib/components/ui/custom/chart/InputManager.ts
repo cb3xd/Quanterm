@@ -56,7 +56,7 @@ export class InputManager {
   }
 
   public moveChart(event: FederatedPointerEvent): void {
-    this.lastGlobalPointer = new Point(event.global.x, event.global.y);
+    this.lastGlobalPointer.set(event.global.x, event.global.y);
     if (!this.chart.visible) return;
     this.chart.actions.moveChart(event);
     if (this.clickedAvailable && this.last) {

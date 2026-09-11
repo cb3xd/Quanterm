@@ -9,6 +9,9 @@
     return num.toString().split(".")[1].length || 0;
   }
 
+  // Memory leak somewhere, use lazy frames or something so every tick doesnt do all that shit and instead waits until something changes
+  let tempPoint = new PIXI.Point();
+  let pricePoint = new PIXI.Point();
   let precision = 2;
   let app: PIXI.Application;
   let chart: Chart;
@@ -19,13 +22,15 @@
   let xLine: PIXI.Graphics;
   let yLine: PIXI.Graphics;
   let priceLabel: PIXI.Text;
-
+  let screenPoint: PIXI.Point;
+  let graphPoint: PIXI.Point;
+  let currPrice: number;
   function tickerCallback() {
-    const screenPoint = chart.input.lastGlobalPointer;
-    const graphPoint = chart.toGraph(screenPoint);
+    screenPoint = chart.input.lastGlobalPointer;
+    graphPoint = chart.toGraph(screenPoint);
     coordinateText.text = `(${Math.round(graphPoint.x)}, ${(graphPoint.y * -1).toFixed(precision)})`;
     xLine.position.set(
-      chart.toGlobal(new PIXI.Point(Math.round(graphPoint.x), graphPoint.y)).x,
+      chart.toGlobal(tempPoint.set(Math.round(graphPoint.x), graphPoint.y)).x,
       screenPoint.y,
     );
     yLine.position.set(0, screenPoint.y);
@@ -35,16 +40,13 @@
       tickersStore.currentTicker !== undefined
         ? tickersStore.currentTicker.symbol.toUpperCase()
         : "Press '+' to add a chart";
-    const currPrice = tickersStore.currentTicker.stream.close_price;
+    currPrice = tickersStore.currentTicker.stream.close_price;
     precision = countDecimals(currPrice);
-    currentPriceLine.stroke({
-      color: "#303030",
-      pixelLine: true,
-    });
+
     currentPriceLine.position.y = chart.toGlobal(
-      new PIXI.Point(0, -1 * currPrice),
+      pricePoint.set(0, -1 * currPrice),
     ).y;
-    priceLabel.position.y = chart.toGlobal(new PIXI.Point(0, -1 * currPrice)).y;
+    priceLabel.position.y = chart.toGlobal(pricePoint.set(0, -1 * currPrice)).y;
     priceLabel.text = `${currPrice}`;
     priceLabel.position.x = app.canvas.width - priceLabel.width;
   }
@@ -84,7 +86,11 @@
 
     currentPriceLine = new PIXI.Graphics()
       .moveTo(-app.canvas.clientWidth * 2, 0)
-      .lineTo(app.canvas.clientWidth * 2, 0);
+      .lineTo(app.canvas.clientWidth * 2, 0)
+      .stroke({
+        color: "#303030",
+        pixelLine: true,
+      });
 
     priceLabel = new PIXI.Text({
       style: {

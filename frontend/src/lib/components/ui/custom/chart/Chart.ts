@@ -1,4 +1,5 @@
 import { Container, DestroyOptions, EventSystem, Point, PointData, Rectangle, Ticker } from "pixi.js";
+import { PriceScale, PriceScaleMode } from './models/price-scale.ts';
 import { InputManager } from "./InputManager.ts";
 import { ActionManager } from "./ActionManager.ts";
 import { Drag, type IDragOptions } from "./chart-actions/Drag.ts";
@@ -31,7 +32,6 @@ const DEFAULT_CHART_OPTIONS: Partial<ICompleteChartOptions> = {
 
 
 export class Chart extends Container {
-
   public moving?: boolean;
   public screenWidth: number;
   public screenHeight: number;
@@ -46,6 +46,9 @@ export class Chart extends Container {
   private _dirty?: boolean;
   private readonly resizeHandler = () => this.resize();
   private readonly tickerFunction?: () => void;
+
+  public readonly priceScale: PriceScale;
+
   constructor(options: IChartOptions) {
     super();
     this.options = { ...DEFAULT_CHART_OPTIONS, ...options, } as ICompleteChartOptions;
@@ -66,6 +69,8 @@ export class Chart extends Container {
     this.x = 0;
     this.y -= this.screenHeight / 2;
     window.addEventListener('resize', this.resizeHandler);
+
+    this.priceScale = new PriceScale({ autoScale: false, mode: PriceScaleMode.Normal });
   }
 
   destroy(options?: DestroyOptions): void {
@@ -74,6 +79,7 @@ export class Chart extends Container {
     window.removeEventListener('resize', this.resizeHandler);
     super.destroy(options);
   }
+
   update(): void {
     if (!this.lastChart) return;
     if (this.lastChart.x !== this.x || this.lastChart.y !== this.y) this.moving = true;
@@ -117,6 +123,9 @@ export class Chart extends Container {
     return this;
   }
 
+  public changeTicker(ticker: string): void {
+
+  }
   resize(
     screenWidth: number = this.options.container.clientWidth,
     screenHeight: number = this.options.container.clientHeight,
@@ -132,7 +141,7 @@ export class Chart extends Container {
   public moveCenter(x: number, y: number): Chart;
   public moveCenter(center: PointData): Chart;
   public moveCenter(...args: [number, number] | [PointData]): Chart {
-    let x, y: number;
+    let x: number, y: number;
 
     if (typeof args[0] === 'number') {
       x = args[0];

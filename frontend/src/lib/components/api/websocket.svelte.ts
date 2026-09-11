@@ -1,10 +1,16 @@
-let websocket = $state({
+interface Websocket {
+  connection: null | WebSocket,
+  connected: boolean,
+  error: string
+}
+
+let websocket: Websocket = $state({
   connection: null,
   connected: false,
   error: ""
 })
 
-let packetBuffer = $state({
+let packetBuffer = $state<{ streams: Record<string, unknown> }>({
   streams: {},
 })
 
@@ -27,8 +33,8 @@ export function disconnect() {
   websocket.connection?.close();
 }
 
-export function subscribe(events, exchange) {
-  if (!websocket.connected) return;
+export function subscribe(events: Array<string>, exchange: string) {
+  if (websocket.connection === null) return;
 
   const packet = JSON.stringify({ method: "sub", events, exchange });
 

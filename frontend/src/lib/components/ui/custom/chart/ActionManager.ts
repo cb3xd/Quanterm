@@ -28,6 +28,7 @@ export class ActionManager {
     ACTION_ORDER.splice(index, 0, name);
     this.sort();
   }
+
   public moveChart(event: FederatedEvent): boolean {
     let stop = false;
     for (const action of this.chart.actions.list) if (action.moveChart(event)) stop = true;
@@ -49,15 +50,18 @@ export class ActionManager {
     }
     return stop;
   }
+
   public get(name: 'drag'): Drag | undefined | null;
   public get(name: 'wheel'): Wheel | undefined | null;
   public get<T extends Action = Action>(name: string): T | undefined | null;
   public get<T extends Action = Action>(name: string): T | undefined | null {
     return this.actions[name] as T;
   }
+
   public reset(): void {
     this.list.forEach((action) => { action.reset(); })
   }
+
   public sort() {
     this.list = [];
     for (const action of ACTION_ORDER) {
@@ -65,6 +69,7 @@ export class ActionManager {
     }
   }
   public wheel(e: WheelEvent): boolean {
+
     let result = false;
     for (const action of this.list) {
       if (action.wheel(e)) result = true;

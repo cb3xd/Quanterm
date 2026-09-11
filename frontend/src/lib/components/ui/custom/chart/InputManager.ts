@@ -26,7 +26,7 @@ export class InputManager {
 
   private addListeners() {
     this.chart.eventMode = 'static';
-    this.chart.hitArea = new Rectangle(-1e7, -1e7, 2e7, 2e7);
+    this.chart.hitArea = new Rectangle(-1e7, -1e7, 2e7, 2e7); // change this
     this.chart.on('globalpointermove', this.moveChart, this);
     this.chart.on('pointerdown', this.handlePointerDown, this);
     this.chart.on('pointerup', this.handlePointerUp, this);

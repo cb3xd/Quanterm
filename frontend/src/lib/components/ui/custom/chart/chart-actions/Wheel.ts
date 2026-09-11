@@ -49,7 +49,6 @@ export class Wheel extends Action {
     const change = Math.pow(2, (1 + this.options.percent) * step);
     const oldPoint = this.chart.toLocal(point);;
 
-
     if (this.axis === 'all') { this.chart.scale.x *= change; this.chart.scale.y *= change; }
     else if (this.axis === 'x') this.chart.scale.x *= change;
     else this.chart.scale.y += change;
@@ -69,17 +68,15 @@ export class Wheel extends Action {
 
     const oldPoint = this.chart.toLocal(point);
 
-    if (this.axis === 'all') { this.chart.scale.x *= change; this.chart.scale.y *= change; }
+    if (this.axis === 'all') {
+      this.chart.scale.x *= change; this.chart.scale.y *= change;
+    }
     else if (this.axis === 'x') this.chart.scale.x *= change;
     else this.chart.scale.y *= change;
 
     this.chart.emit('zoomed', { chart: this.chart, type: 'wheel' });
-
     this.adjustChartForZoom(oldPoint, point as PointData);
 
-
     return true;
-
   }
-
 }

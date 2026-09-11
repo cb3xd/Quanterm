@@ -9,15 +9,15 @@
     exchangesStore,
   } from "$lib/components/api/apiDataStore.svelte";
   import {
-    chartsStore,
-    setCurrentChart,
-  } from "../chart/chartsDataStore.svelte";
+    tickersStore,
+    setCurrentTicker,
+  } from "../chart/tickerDataStore.svelte.ts";
 
   // On startup
   $effect(() => {
     fetchSymbols();
   });
-  let charts = $derived(chartsStore.charts);
+  let charts = $derived(tickersStore.tickers);
   let exchanges = $derived(exchangesStore.current);
   let symbols = $derived(symbolStore.flattened);
   let exchangeFilter = $state("");
@@ -31,7 +31,7 @@
 <div class="flex flex-row min-w-screen items-start border-b-1">
   {#each charts.entries() as [key, chart]}<Button
       class="border-0"
-      onclick={() => setCurrentChart(chart.ticker, chart.exchange)}
+      onclick={() => setCurrentTicker(chart.ticker, chart.exchange, false)}
       variant="outline">{chart.ticker.toUpperCase()}</Button
     >{/each}
   <Dialog.Root class="w-fit">
@@ -58,7 +58,7 @@
         <Dialog.Close asChild>
           <Button
             onclick={() => {
-              setCurrentChart(ticker, exchangeFilter, loadHist);
+              setCurrentTicker(ticker, exchangeFilter, loadHist);
             }}
             variant="outline"
             disabled={disableAdd}>Add</Button

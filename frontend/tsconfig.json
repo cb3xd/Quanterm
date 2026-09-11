@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "allowJs": true,
+    "allowImportingTsExtensions": true,
+    "checkJs": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "target": "ES2020",
+    "moduleResolution": "bundler",
+    "paths": {
+      "$lib": [
+        "src/lib"
+      ],
+      "$lib/*": [
+        "src/lib/*"
+      ]
+    }
+  }
+}

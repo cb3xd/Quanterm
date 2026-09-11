@@ -2,7 +2,7 @@
   import { onDestroy, onMount } from "svelte";
   import { Chart } from "./Chart.ts";
   import * as PIXI from "pixi.js";
-  import { chartsStore, setCurrentChart } from "./chartsDataStore.svelte.js";
+  import { tickersStore, setCurrentTicker } from "./tickerDataStore.svelte.ts";
 
   function countDecimals(num: number): number {
     if (Math.floor(num.valueOf()) === num.valueOf()) return 0;
@@ -29,13 +29,13 @@
       screenPoint.y,
     );
     yLine.position.set(0, screenPoint.y);
-    if (!chartsStore.currentChart) return;
-    if (!chartsStore.currentChart.stream) return;
+    if (!tickersStore.currentTicker) return;
+    if (!tickersStore.currentTicker.stream) return;
     text.text =
-      chartsStore.currentChart !== undefined
-        ? chartsStore.currentChart.ticker.toUpperCase()
+      tickersStore.currentTicker !== undefined
+        ? tickersStore.currentTicker.ticker.toUpperCase()
         : "Press '+' to add a chart";
-    const currPrice = chartsStore.currentChart.stream.close_price;
+    const currPrice = tickersStore.currentTicker.stream.close_price;
     precision = countDecimals(currPrice);
     currentPriceLine.stroke({
       color: "#303030",

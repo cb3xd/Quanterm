@@ -10,7 +10,7 @@ _exchange_registry: dict[ExchangeID, Exchange] = {}
 
 
 def get_registry():
-    return _exchange_registry.copy()
+    return _exchange_registry
 
 
 def register_exchange(exchange_id: ExchangeID):

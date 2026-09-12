@@ -1,3 +1,4 @@
+import logging
 from typing import override
 
 import aiohttp
@@ -33,6 +34,7 @@ class BinanceAPI(BaseAPI):
 
     @override
     async def fetch_symbols(self) -> set[str]:
+        logging.getLogger("uvicorn").info("Fetching symbols")
         exchange_info = await self.fetch_exchange_info()
         symbols = set()
         for symbol in exchange_info.symbols:

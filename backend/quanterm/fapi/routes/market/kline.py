@@ -1,6 +1,3 @@
-import logging
-
-from fastapi import HTTPException
 from msgspec import Struct, json, to_builtins
 from quanterm.exchange.constants import ExchangeID
 from quanterm.exchange import manager

@@ -1,5 +1,4 @@
-from fastapi import HTTPException
-from msgspec import Struct, json, to_builtins
+from msgspec import json, to_builtins
 from quanterm.exchange.constants import ExchangeID
 from quanterm.exchange.exchange_manager import manager
 from quanterm.fapi.routers import api_router

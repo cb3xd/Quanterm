@@ -1,6 +1,6 @@
 import asyncio
 
-from quanterm.exchange.binanceusdm.external_api import BinanceAPI
+from quanterm.exchange.binanceusdm.api import BinanceAPI
 
 
 async def main():

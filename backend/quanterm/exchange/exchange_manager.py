@@ -2,13 +2,15 @@ import asyncio
 from quanterm.bus.base import get_event_bus
 from quanterm.exchange.base import Exchange
 from quanterm.exchange.constants import ExchangeID
-from quanterm.exchange.registry import exchange_registry
+from quanterm.registries import exchange_registry
 from quanterm.websocket.base import BaseWS
 
 
 class ExchangeManager:
     def __init__(self) -> None:
-        self._active_exchanges: dict[ExchangeID, Exchange] = exchange_registry
+        self._active_exchanges: dict[ExchangeID, Exchange] = (
+            exchange_registry.get_registry()
+        )
         self._websocket_instances: dict[ExchangeID, BaseWS] = {}
         self._event_bus = get_event_bus()
 
@@ -22,7 +24,7 @@ class ExchangeManager:
 
     def get_exchange(self, exchange_id: ExchangeID) -> Exchange:
         if exchange_id not in self.active_exchanges:
-            exchange_class = exchange_registry[exchange_id]
+            exchange_class = self._active_exchanges[exchange_id]
             if not exchange_class:
                 raise ValueError(f"Exchange {exchange_id} was never registered!")
 

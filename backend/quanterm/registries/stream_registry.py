@@ -15,10 +15,3 @@ class StreamRegistry:
 
     def get_stream_key(self, event_id: str):
         return self.event_id_registry.get(event_id)
-
-
-_stream_registry = StreamRegistry()
-
-
-def get_stream_registry():
-    return _stream_registry

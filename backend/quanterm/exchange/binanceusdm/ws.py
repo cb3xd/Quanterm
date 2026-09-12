@@ -5,10 +5,7 @@ from typing import override
 import msgspec
 import websockets
 import json
-from quanterm.exchange.binanceusdm.schemas import (
-    PACKET_MAPPERS,
-    StreamRouterType,
-)
+from quanterm.exchange.binanceusdm.mappers import PACKET_MAPPERS, StreamRouterType
 from quanterm.exchange.binanceusdm.utils import format_id
 from quanterm.exchange.constants import ExchangeID
 from quanterm.websocket.base import BaseWS

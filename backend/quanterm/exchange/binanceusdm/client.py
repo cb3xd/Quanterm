@@ -1,8 +1,8 @@
 from quanterm.exchange.base import Exchange
-from quanterm.exchange.binanceusdm.external_api import BinanceAPI
+from quanterm.exchange.binanceusdm.api import BinanceAPI
 from quanterm.exchange.binanceusdm.ws import BinanceWebsocket
 from quanterm.exchange.constants import ExchangeID
-from quanterm.exchange.registry import register_exchange
+from quanterm.registries.exchange_registry import register_exchange
 
 
 @register_exchange(ExchangeID.binanceusdm)

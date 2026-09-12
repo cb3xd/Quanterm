@@ -1,12 +1,12 @@
 from quanterm.exchange.constants import ExchangeID
-from quanterm.exchange.registry import exchange_registry
+from quanterm.registries.exchange_registry import get_registry
 
 
 class SymbolRegistry:
     def __init__(self) -> None:
         self.supported_symbols: dict[str, set[ExchangeID]] = {}
         self.formatted_symbols: dict[str, str] = {}
-        self.active_exchanges = exchange_registry
+        self.active_exchanges = get_registry()
 
     async def _get_all_symbols(self):
         for exchange_id, exchange_instance in self.active_exchanges.items():
@@ -30,6 +30,3 @@ class SymbolRegistry:
 
     def get_dash_format(self, symbol):
         return self.formatted_symbols.get(symbol)
-
-
-symbol_registry = SymbolRegistry()

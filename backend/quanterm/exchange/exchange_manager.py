@@ -43,6 +43,3 @@ class ExchangeManager:
         await asyncio.gather(
             *[exchange.close() for exchange in self.active_exchanges.values()]
         )
-
-
-manager = ExchangeManager()

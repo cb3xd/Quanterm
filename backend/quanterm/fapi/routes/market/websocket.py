@@ -6,7 +6,7 @@ from fastapi import WebSocket
 from msgspec import Struct, json
 from quanterm.bus.base import get_event_bus
 from quanterm.exchange.constants import ExchangeID
-from quanterm.exchange.exchange_manager import manager
+from quanterm.exchange import manager
 from quanterm.fapi.routers import ws_router
 
 

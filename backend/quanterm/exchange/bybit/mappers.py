@@ -1,4 +1,3 @@
-import logging
 from typing import Any, Callable
 
 import msgspec
@@ -28,7 +27,6 @@ def map_list(packets: BybitEnvelope) -> list[msgspec.Struct]:
     result: list[msgspec.Struct] = []
     for packet in packets.data:
         mapper = PACKET_MAPPERS.get(packets.topic[0])
-        logging.getLogger("test").debug(f"{__name__} - {mapper}:{packets.topic[0]}")
         if mapper is None:
             break
         formatted_data = mapper(packet, packets.topic[len(packets.topic) - 1])
@@ -53,7 +51,6 @@ def map_kline(kline: BybitKlinePacket, symbol: str):
     if type(kline) is not BybitKlinePacket:
         kline = msgspec.convert(kline, BybitKlinePacket)
     interval = _interval_map.get(kline.interval)
-    print(interval, "BALLS")
     if interval is None:
         raise ValueError("Invalid interval")
     return KlinePacket(

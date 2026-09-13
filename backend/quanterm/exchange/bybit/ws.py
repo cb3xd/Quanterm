@@ -1,6 +1,5 @@
 import json
-import logging
-from typing import override
+from typing import Any, override
 
 import msgspec
 
@@ -39,7 +38,6 @@ class BybitWebsocket(BaseWS):
             return
 
         for event, key in stream_key_map.items():
-            logging.getLogger("test").debug(f"{self._exchange_id}.{event} : {key}")
             self._stream_registry.register(f"{self._exchange_id}.{event}", key)
 
         self._active_streams.update(events)
@@ -65,12 +63,10 @@ class BybitWebsocket(BaseWS):
             msg_type = type(msg.data)
             data_mapper = PACKET_MAPPERS.get(msg_type)
 
-            logging.getLogger("test").debug(data_mapper)
             if data_mapper is None:
                 return
 
             formatted_data = data_mapper(msg)
-            logging.getLogger("test").debug(formatted_data)
 
             if formatted_data is None:
                 return
@@ -81,11 +77,10 @@ class BybitWebsocket(BaseWS):
                 return
 
             for event in formatted_data:
-                logging.getLogger("test").debug(f"Publishing: {event}")
                 await self._event_bus.publish(event_id, event)
 
         except Exception as e:
-            logging.getLogger("test").exception(f"{self._exchange_id}: {e}")
+            self._logger.exception(f"{self._exchange_id}: {e}")
             pass
 
         return

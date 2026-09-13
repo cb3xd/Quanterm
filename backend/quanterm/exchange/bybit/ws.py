@@ -5,15 +5,13 @@ from typing import override
 import msgspec
 
 
-from quanterm.exchange.bybit.mappers import PACKET_MAPPERS, StreamRouterType
+from quanterm.exchange.bybit.mappers import (
+    PACKET_MAPPERS,
+    BybitEnvelope,
+)
 from quanterm.exchange.bybit.utils import format_id
 from quanterm.exchange.constants import ExchangeID
 from quanterm.websocket.base import BaseWS
-
-
-class BybitEnvelope(msgspec.Struct):
-    topic: str
-    data: StreamRouterType = msgspec.field(name="data")
 
 
 class BybitWebsocket(BaseWS):
@@ -62,18 +60,22 @@ class BybitWebsocket(BaseWS):
             if raw.startswith(b'{"success":'):
                 return
             msg = self._envelope_decoder.decode(raw)
-            msg_type = type(msg.data[0])
+            topic = msg.topic
+            msg.topic = msg.topic.split(".")
+            msg_type = type(msg.data)
             data_mapper = PACKET_MAPPERS.get(msg_type)
 
+            logging.getLogger("test").debug(data_mapper)
             if data_mapper is None:
                 return
 
-            formatted_data = data_mapper(msg.data)
+            formatted_data = data_mapper(msg)
+            logging.getLogger("test").debug(formatted_data)
 
             if formatted_data is None:
                 return
 
-            event_id = self._stream_registry.get_event_id(msg.topic)
+            event_id = self._stream_registry.get_event_id(topic)
 
             if event_id is None:
                 return
@@ -83,7 +85,7 @@ class BybitWebsocket(BaseWS):
                 await self._event_bus.publish(event_id, event)
 
         except Exception as e:
-            logging.getLogger("uvicorn").error(f"{self._exchange_id}: {e}")
+            logging.getLogger("test").exception(f"{self._exchange_id}: {e}")
             pass
 
         return

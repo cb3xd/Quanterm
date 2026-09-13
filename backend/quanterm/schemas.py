@@ -23,10 +23,10 @@ class KlinePacket(Struct):
     high_price: str
     low_price: str
     volume: str
-    trade_count: int
     is_closed: bool
-    taker_buy_base_volume: str
-    taker_buy_quote_volume: str
+    trade_count: int | None = None
+    taker_buy_base_volume: str | None = None
+    taker_buy_quote_volume: str | None = None
     event_id: str | None = None
 
 

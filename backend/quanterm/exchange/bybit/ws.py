@@ -5,7 +5,7 @@ from typing import override
 import msgspec
 
 
-from quanterm.exchange.bybit.mappers import PACKET_MAPPERS, WS_DECODER, StreamRouterType
+from quanterm.exchange.bybit.mappers import PACKET_MAPPERS, StreamRouterType
 from quanterm.exchange.bybit.utils import format_id
 from quanterm.exchange.constants import ExchangeID
 from quanterm.websocket.base import BaseWS

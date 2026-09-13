@@ -25,7 +25,5 @@ def map_trade(packet: list[BybitTradePacket]):
 
 StreamRouterType = list[BybitTradePacket]
 
-WS_DECODER = msgspec.json.Decoder(StreamRouterType)
-
 
 PACKET_MAPPERS: dict[Any, Callable] = {BybitTradePacket: map_trade}

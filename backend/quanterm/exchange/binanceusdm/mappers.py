@@ -85,8 +85,6 @@ def list_mapper(packets: list):
 
 StreamRouterType = BinanceTradePacket | BinanceKlinePacket | list[BinanceMarketData]
 
-WS_DECODER = json.Decoder(StreamRouterType)
-
 PACKET_MAPPERS: dict[Any, Callable] = {
     BinanceTradePacket: map_trade,
     BinanceKlinePacket: map_kline,

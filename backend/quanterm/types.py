@@ -21,4 +21,4 @@ class KlineIntervals(StrEnum):
     daily = "1d"
     day_3 = "3d"
     weekly = "1w"
-    monthly = "1m"
+    monthly = "m"

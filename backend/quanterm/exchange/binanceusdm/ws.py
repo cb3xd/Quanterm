@@ -16,87 +16,44 @@ class BinanceEnvelope(msgspec.Struct):
     packet: StreamRouterType = msgspec.field(name="data")
 
 
-_envelope_decoder = msgspec.json.Decoder(BinanceEnvelope)
-
-
 class BinanceWebsocket(BaseWS):
     def __init__(self) -> None:
         super().__init__()
-        self.uri: str = "wss://fstream.binance.com/market/stream"
-        self.encoder = msgspec.json.Encoder()
-        self.max_streams: int = 1024
+        self._uri: str = "wss://fstream.binance.com/market/stream"
+        self._max_streams: int = 1024
         self._reconnect_delay: float = 1.0
         self._max_delay: float = 60.0
+        self._envelope_decoder = msgspec.json.Decoder(BinanceEnvelope)
+        self._exchange_id = ExchangeID.binanceusdm
+
+    def _get_stream_keys(self, events: set[str]) -> dict[str, str]:
+        """Convert events to their stream keys"""
+        return {event: format_id(event) for event in events}
 
     @override
-    async def connect(self) -> None:
-        delay = self._reconnect_delay
-        try:
-            self.websocket: (
-                websockets.ClientConnection | None
-            ) = await websockets.connect(self.uri, ping_interval=20, ping_timeout=10)
-            self._reconnect_delay = 1.0
-            self._watch_task: asyncio.Task[None] | None = asyncio.create_task(
-                self._listen()
-            )
-        except (TimeoutError, OSError, websockets.WebSocketException) as e:
-            print(f"WS reconnect in {delay}s: {e}")
-            await asyncio.sleep(delay)
-            self._reconnect_delay = min(delay * 2, self._max_delay)
-            await self.connect()
+    async def _subscribe(self, events: set[str]):
+        if self._websocket is None:
+            raise RuntimeError(f"{self._exchange_id}: websocket not connected")
 
-    @override
-    async def disconnect(self) -> None:
-        if self._watch_task:
-            _ = self._watch_task.cancel()
-            try:
-                await self._watch_task
-            except asyncio.CancelledError:
-                pass
+        events = events.difference(self._active_streams)
+        stream_key_map = self._get_stream_keys(events)
 
-            self._watch_task = None
-
-        if self.websocket:
-            await self.websocket.close()
-            self.websocket = None
-
-        self.active_streams.clear()
-
-        print("WS Disconnected, attempting reconnect")
-        await self.connect()
-
-    @override
-    async def subscribe(self, events: set[str]):
-
-        if self.active_streams.__len__() == self.max_streams:
-            print("Max streams reached")
+        if not stream_key_map:
             return
 
-        if self.websocket is None:
-            print("Connect first.")
-            return
+        for event, key in stream_key_map.items():
+            self._stream_registry.register(f"{ExchangeID.binanceusdm}.{event}", key)
 
-        events = events.difference(self.active_streams)
-        stream_keys: set[str] = set()
-
-        for event in events:
-            stream_key = format_id(event)
-            stream_keys.add(stream_key)
-            self.stream_registry.register(
-                f"{ExchangeID.binanceusdm}.{event}", stream_key
-            )
-
-        self.active_streams.update(events)
-
-        if stream_keys.__len__() <= 0:
-            return
-
+        self._active_streams.update(events)
         subscribe_message = {
             "method": "SUBSCRIBE",
-            "params": list(stream_keys),
+            "params": list(stream_key_map.values()),
         }
-        logging.getLogger("uvicorn").info(f"Connecting to {events.__len__()} streams.")
-        await self.websocket.send(json.dumps(subscribe_message))
+        await self._websocket.send(json.dumps(subscribe_message))
+
+    @override
+    async def unsubscribe(self, events: set[str]) -> None:
+        await super().unsubscribe(events)
 
     @override
     async def _on_message(self, raw: bytes):
@@ -104,7 +61,7 @@ class BinanceWebsocket(BaseWS):
             if raw.startswith(b'{"result"}'):
                 return
 
-            msg = _envelope_decoder.decode(raw)
+            msg = self._envelope_decoder.decode(raw)
             if msg.packet is None:
                 return
             msg_type = type(msg.packet)
@@ -113,12 +70,12 @@ class BinanceWebsocket(BaseWS):
 
             if formatted_data is None:
                 return
-            event_id = self.stream_registry.get_event_id(msg.stream)
+            event_id = self._stream_registry.get_event_id(msg.stream)
             if event_id is None:
                 return
             formatted_data = formatted_data(msg.packet)
             formatted_data.event_id = event_id
-            await self.event_bus.publish(event_id, formatted_data)
+            await self._event_bus.publish(event_id, formatted_data)
         except msgspec.ValidationError:
             pass
         except Exception:

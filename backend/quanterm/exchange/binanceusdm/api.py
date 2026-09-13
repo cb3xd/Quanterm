@@ -4,7 +4,6 @@ from typing import override
 import aiohttp
 from fastapi import HTTPException
 import msgspec
-from msgspec.json import Encoder
 from quanterm.exchange.binanceusdm.api_schemas import (
     Candle,
     ExchangeInfo,
@@ -12,13 +11,14 @@ from quanterm.exchange.binanceusdm.api_schemas import (
 )
 from quanterm.external_api.base import BaseAPI
 from quanterm.types import KlineIntervals
+from quanterm.websocket import JSON_ENCODER
 
 
 class BinanceAPI(BaseAPI):
     def __init__(self) -> None:
         url = "https://fapi.binance.com/fapi/v1"
         kline_decoder = msgspec.json.Decoder(list[Candle])
-        self.encoder = Encoder()
+        self.encoder = JSON_ENCODER
         self.price_change_decoder = msgspec.json.Decoder(TickerPriceChange)
         self._session: aiohttp.ClientSession | None = None
         super().__init__(url, kline_decoder)
@@ -70,18 +70,3 @@ class BinanceAPI(BaseAPI):
             }
 
             return kline_dataset
-
-    @override
-    async def fetch_price_change(self, symbol: str):
-        params = {"symbol": symbol.replace("-", "").upper()}
-
-        session = await self._get_session()
-        async with session.get(f"{self.url}/ticker/24hr", params=params) as r:
-            try:
-                r.raise_for_status()
-            except Exception:
-                raise HTTPException(r.status, detail=f"Invalid Symbol: {symbol}")
-            raw_bytes = await r.read()
-
-            ticker_price_change = self.price_change_decoder.decode(raw_bytes)
-            return ticker_price_change

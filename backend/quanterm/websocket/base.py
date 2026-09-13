@@ -8,7 +8,22 @@ from quanterm.exchange.constants import ExchangeID
 from quanterm.registries import STREAM_REGISTRY
 from quanterm.websocket import JSON_ENCODER
 
-logger = logging.getLogger("uvicorn")
+uvicorn_logger = logging.getLogger("uvicorn")
+
+logger: logging.Logger
+if uvicorn_logger.hasHandlers():
+    logger = uvicorn_logger
+else:
+    logger = logging.getLogger("test")
+
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter("[%(levelname)s] - %(message)s"))
+        logger.addHandler(handler)
+
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+    logger.info("Testing environment logger enabled")
 
 
 class BaseWS(ABC):
@@ -38,6 +53,8 @@ class BaseWS(ABC):
         logger.info(f"{self._exchange_id}: subscribing to {events}")
         await self._subscribe(events)
 
+    @abstractmethod
+    async def _unsubscribe(self, events: set[str]) -> None: ...
     async def unsubscribe(self, events: set[str]) -> None:
         if self._active_streams == 0:
             logger.warning(
@@ -49,7 +66,7 @@ class BaseWS(ABC):
             return
 
         logger.info(f"{self._exchange_id}: unsubscribing to {events}")
-        return
+        await self._unsubscribe(events)
 
     @abstractmethod
     async def _on_message(self, raw: bytes) -> None: ...

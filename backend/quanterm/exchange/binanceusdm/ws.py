@@ -1,9 +1,5 @@
-import asyncio
-import logging
-
 from typing import override
 import msgspec
-import websockets
 import json
 from quanterm.exchange.binanceusdm.mappers import PACKET_MAPPERS, StreamRouterType
 from quanterm.exchange.binanceusdm.utils import format_id
@@ -52,8 +48,8 @@ class BinanceWebsocket(BaseWS):
         await self._websocket.send(json.dumps(subscribe_message))
 
     @override
-    async def unsubscribe(self, events: set[str]) -> None:
-        await super().unsubscribe(events)
+    async def _unsubscribe(self, events: set[str]) -> None:
+        return
 
     @override
     async def _on_message(self, raw: bytes):

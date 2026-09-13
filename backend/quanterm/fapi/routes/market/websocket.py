@@ -7,6 +7,7 @@ from quanterm.bus.base import get_event_bus
 from quanterm.exchange.constants import ExchangeID
 from quanterm.exchange import manager
 from quanterm.fapi.routers import ws_router
+from quanterm.websocket import JSON_ENCODER
 
 
 class FapiMethods(StrEnum):
@@ -26,7 +27,7 @@ class Unsubscribe(Struct, tag_field="method", tag=str(FapiMethods.UNSUBSCRIBE)):
 
 _msg_types = Subscribe | Unsubscribe
 _msg_decoder = json.Decoder(_msg_types)
-_msg_encoder = json.Encoder()
+_msg_encoder = JSON_ENCODER
 _event_bus = get_event_bus()
 
 

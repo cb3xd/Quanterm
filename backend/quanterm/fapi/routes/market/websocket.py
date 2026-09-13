@@ -1,7 +1,6 @@
 import asyncio
 import collections
 from enum import StrEnum
-import logging
 from fastapi import WebSocket
 from msgspec import Struct, json
 from quanterm.bus.base import get_event_bus
@@ -29,8 +28,6 @@ _msg_types = Subscribe | Unsubscribe
 _msg_decoder = json.Decoder(_msg_types)
 _msg_encoder = json.Encoder()
 _event_bus = get_event_bus()
-
-logger = logging.getLogger("uvicorn")
 
 
 async def websocket_loop(websocket: WebSocket):
@@ -64,8 +61,6 @@ async def websocket_loop(websocket: WebSocket):
 
                 message = _msg_decoder.decode(data)
                 exchange = manager.get_exchange(message.exchange)
-
-                logging.getLogger("uvicorn").info(message)
 
                 if type(message) is Unsubscribe:
                     continue

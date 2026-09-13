@@ -30,58 +30,61 @@ _msg_encoder = json.Encoder()
 _event_bus = get_event_bus()
 
 
+class ConnectionState:
+    """Shared state between the send and receive loops for one socket."""
+
+    def __init__(self):
+        self.queue: collections.deque[bytes] = collections.deque(maxlen=4000)
+        self.data_available = asyncio.Event()
+        self.disconnected = False
+
+    async def queue_packet(self, packet: Struct):
+        self.queue.append(_msg_encoder.encode(packet))
+        self.data_available.set()
+
+
+async def _send_loop(websocket: WebSocket, state: ConnectionState):
+    while not state.disconnected:
+        try:
+            if not state.queue:
+                state.data_available.clear()
+                await state.data_available.wait()
+                continue
+            await websocket.send_bytes(state.queue.popleft())
+        except Exception:
+            state.disconnected = True
+
+
+async def _handle_message(message: Subscribe | Unsubscribe, state: ConnectionState):
+    if isinstance(message, Unsubscribe):
+        return
+
+    exchange = manager.get_exchange(message.exchange)
+    await exchange.ws.subscribe(message.events)
+
+    for event in message.events:
+        event_id = f"{message.exchange}.{event}"
+        _event_bus.on(event_id, state.queue_packet)
+
+
+async def _receive_loop(websocket: WebSocket, state: ConnectionState):
+    while not state.disconnected:
+        try:
+            data = await websocket.receive_bytes()
+            message = _msg_decoder.decode(data)
+            await _handle_message(message, state)
+        except Exception:
+            state.disconnected = True
+
+
 async def websocket_loop(websocket: WebSocket):
-    queue = collections.deque(maxlen=4000)
-    data_available = asyncio.Event()
-    disconnected = False
-
-    async def queue_packet(packet: Struct):
-        queue.append(_msg_encoder.encode(packet))
-        data_available.set()
-
-    async def send_loop():
-        nonlocal disconnected
-        while not disconnected:
-            try:
-                if queue:
-                    await websocket.send_bytes(queue.popleft())
-                else:
-                    data_available.clear()
-                    await data_available.wait()
-
-            except Exception:
-                disconnected = True
-                break
-
-    async def receive_loop():
-        nonlocal disconnected
-        while not disconnected:
-            try:
-                data = await websocket.receive_bytes()
-
-                message = _msg_decoder.decode(data)
-                exchange = manager.get_exchange(message.exchange)
-
-                if type(message) is Unsubscribe:
-                    continue
-                events = message.events
-                await exchange.ws.subscribe(events)
-
-                event_ids = set(
-                    map(lambda event_id: message.exchange + "." + event_id, events)
-                )
-                for event_id in event_ids:
-                    _event_bus.on(event_id, queue_packet)
-            except Exception:
-                disconnected = True
-                break
-
+    state = ConnectionState()
     try:
         async with asyncio.TaskGroup() as task_group:
-            task_group.create_task(send_loop())
-            task_group.create_task(receive_loop())
+            task_group.create_task(_send_loop(websocket, state))
+            task_group.create_task(_receive_loop(websocket, state))
     finally:
-        _event_bus.unregister_all(queue_packet)
+        _event_bus.unregister_all(state.queue_packet)
 
 
 @ws_router.websocket("")

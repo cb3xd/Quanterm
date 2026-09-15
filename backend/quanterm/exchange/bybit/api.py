@@ -1,3 +1,4 @@
+import logging
 from typing import override
 from msgspec import json
 from quanterm.exchange.bybit.api_schemas import TickerData
@@ -22,6 +23,7 @@ class BybitAPI(BaseAPI):
 
     @override
     async def fetch_symbols(self) -> set[str]:
+        logging.getLogger("uvicorn").info("Fetching symbols for bybit")
         ticker_data = await self.fetch_exchange_info()
         symbols = set()
         for symbol in ticker_data.current_page.symbols:

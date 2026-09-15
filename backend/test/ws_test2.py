@@ -13,8 +13,8 @@ async def stream_data():
         payload = encoder.encode(
             {
                 "method": "sub",
-                "events": ["market_price"],
-                "exchange": "binanceusdm",
+                "events": ["kline_stream.btc-usdt.1m"],
+                "exchange": "bybit",
             }
         )
         print(payload)

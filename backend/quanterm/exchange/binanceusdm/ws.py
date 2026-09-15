@@ -74,5 +74,5 @@ class BinanceWebsocket(BaseWS):
             await self._event_bus.publish(event_id, formatted_data)
         except msgspec.ValidationError:
             pass
-        except Exception:
-            return
+        except Exception as e:
+            self._logger.exception(f"{self._exchange_id}: {e}")

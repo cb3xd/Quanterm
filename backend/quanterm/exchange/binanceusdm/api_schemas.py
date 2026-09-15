@@ -1,5 +1,6 @@
-from decimal import Decimal
 import msgspec
+
+from quanterm.types import KlineIntervals
 
 
 class RateLimit(msgspec.Struct, rename="camel"):
@@ -69,16 +70,22 @@ class ExchangeInfo(msgspec.Struct, rename="camel"):
 
 class Candle(msgspec.Struct, array_like=True, rename="camel"):
     open_time: int
-    open_price: Decimal
-    high_price: Decimal
-    low_price: Decimal
-    close_price: Decimal
-    volume: Decimal
+    open_price: str
+    high_price: str
+    low_price: str
+    close_price: str
+    volume: str
     close_time: int
-    quote_asset_volume: Decimal
+    quote_asset_volume: str
     number_of_trades: int
-    taker_buy_base_asset_volume: Decimal
-    taker_buy_quote_asset_volume: Decimal
+    taker_buy_base_asset_volume: str
+    taker_buy_quote_asset_volume: str
+
+
+class KlineData(msgspec.Struct, rename="camel"):
+    symbol: str
+    interval: KlineIntervals
+    candles: list[Candle]
 
 
 class TickerPriceChange(msgspec.Struct, rename="camel"):

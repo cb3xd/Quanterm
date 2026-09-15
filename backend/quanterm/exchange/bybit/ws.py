@@ -77,6 +77,8 @@ class BybitWebsocket(BaseWS):
                 return
 
             for event in formatted_data:
+                event.event_id = event_id
+                self._logger.info(event.event_id)
                 await self._event_bus.publish(event_id, event)
 
         except Exception as e:

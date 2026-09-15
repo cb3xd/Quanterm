@@ -37,6 +37,11 @@ export function setCurrentTicker(ticker: ITicker, loadHist: boolean) {
   currentKey = key;
 }
 
+export function removeTicker(ticker: ITicker) {
+  const key = `${ticker.symbol}.${ticker.exchange}`;
+  currentKey = ""
+  tickers.delete(key);
+}
 export const tickersStore = {
   get tickers() { return tickers },
   get currentKey() { return currentKey },

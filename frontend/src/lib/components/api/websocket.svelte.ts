@@ -23,7 +23,6 @@ export function connect() {
   websocket.connection.onmessage = async (e) => {
     const text = await e.data.text();
     const packet = JSON.parse(text); // Change these later on
-
     packetBuffer.streams[packet.event_id] = packet;
   }
   websocket.connection.onclose = () => websocket.connected = false;
@@ -37,7 +36,6 @@ export function subscribe(events: string[], exchange: string) {
   if (websocket.connection === null) return;
 
   const packet = JSON.stringify({ method: "sub", events, exchange });
-  console.log(packet);
   websocket.connection.send(new TextEncoder().encode(packet));
 }
 

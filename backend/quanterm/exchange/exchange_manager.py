@@ -1,5 +1,4 @@
 import asyncio
-from quanterm.bus.base import get_event_bus
 from quanterm.exchange.base import Exchange
 from quanterm.exchange.constants import ExchangeID
 from quanterm.registries import exchange_registry
@@ -12,7 +11,6 @@ class ExchangeManager:
             exchange_registry.get_registry()
         )
         self._websocket_instances: dict[ExchangeID, BaseWS] = {}
-        self._event_bus = get_event_bus()
 
     @property
     def active_exchanges(self):

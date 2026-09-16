@@ -1,17 +1,22 @@
 from msgspec import Struct
 
 
-class TradePacket(Struct):
+class Packet(Struct, kw_only=True):
+    exchange_id: str
+    event_time: int
+    event_id: str | None = None
+
+
+class TradePacket(Packet, kw_only=True):
     exchange_id: str
     symbol: str
     price: str
     size: str
     event_time: int
     is_buy: bool
-    event_id: str | None = None
 
 
-class KlinePacket(Struct):
+class KlinePacket(Packet, kw_only=True):
     exchange_id: str
     event_time: int
     open_time: int
@@ -27,10 +32,9 @@ class KlinePacket(Struct):
     trade_count: int | None = None
     taker_buy_base_volume: str | None = None
     taker_buy_quote_volume: str | None = None
-    event_id: str | None = None
 
 
-class MarketDataPacket(Struct):
+class MarketDataPacket(Packet, kw_only=True):
     event_time: int
     market_price: str
     average_price: str
@@ -39,7 +43,6 @@ class MarketDataPacket(Struct):
     next_funding_time: int
 
 
-class AggregateMarketDataPacket(Struct):
+class AggregateMarketDataPacket(Packet, kw_only=True):
     exchange_id: str
     market_data: dict[str, MarketDataPacket]
-    event_id: str | None = None

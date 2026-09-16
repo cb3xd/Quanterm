@@ -12,6 +12,11 @@ class BinanceEnvelope(msgspec.Struct):
     packet: StreamRouterType = msgspec.field(name="data")
 
 
+class ErrorMessage(msgspec.Struct):
+    code: int
+    msg: str
+
+
 class BinanceWebsocket(BaseWS):
     def __init__(self) -> None:
         super().__init__()
@@ -20,6 +25,7 @@ class BinanceWebsocket(BaseWS):
         self._reconnect_delay: float = 1.0
         self._max_delay: float = 60.0
         self._envelope_decoder = msgspec.json.Decoder(BinanceEnvelope)
+        self._error_decoder = msgspec.json.Decoder(ErrorMessage)
         self._exchange_id = ExchangeID.binanceusdm
 
     def _get_stream_keys(self, events: set[str]) -> dict[str, str]:
@@ -54,24 +60,34 @@ class BinanceWebsocket(BaseWS):
     @override
     async def _on_message(self, raw: bytes):
         try:
-            if raw.startswith(b'{"result"}'):
+            if raw.startswith(b'{"result"'):
+                self._logger.info(
+                    f"{self._exchange_id}: ignoring subscription acknowledgement."
+                )
                 return
+            if raw.startswith(b'{"code"'):
+                msg = self._error_decoder.decode(raw)
+                raise RuntimeError(msg)
 
             msg = self._envelope_decoder.decode(raw)
-            if msg.packet is None:
-                return
+
             msg_type = type(msg.packet)
 
-            formatted_data = PACKET_MAPPERS.get(msg_type)
-
-            if formatted_data is None:
-                return
             event_id = self._stream_registry.get_event_id(msg.stream)
             if event_id is None:
                 return
-            formatted_data = formatted_data(msg.packet)
+
+            data_mapper = PACKET_MAPPERS.get(msg_type)
+
+            if data_mapper is None:
+                raise RuntimeError(
+                    f"{self._exchange_id}: data mapper for {msg_type} not found."
+                )
+
+            formatted_data = data_mapper(msg.packet)
             formatted_data.event_id = event_id
             await self._event_bus.publish(event_id, formatted_data)
+
         except msgspec.ValidationError:
             pass
         except Exception as e:

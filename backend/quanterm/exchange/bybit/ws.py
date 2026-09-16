@@ -1,5 +1,6 @@
+import asyncio
 import json
-from typing import Any, override
+from typing import override
 
 import msgspec
 
@@ -49,40 +50,51 @@ class BybitWebsocket(BaseWS):
         await self._websocket.send(json.dumps(subscribe_message))
 
     @override
-    async def _unsubscribe(self, events: set[str]) -> None:
-        return
+    async def _unsubscribe(self, events: set[str]):
+        return NotImplemented
 
     @override
     async def _on_message(self, raw: bytes) -> None:
         try:
+            if raw.startswith(b'{"success":"false"'):
+                raise RuntimeError(f"{self._exchange_id}: subscription failed\n{raw}")
             if raw.startswith(b'{"success":'):
+                self._logger.debug(
+                    f"{self._exchange_id}: ignoring subscription acknowledgement"
+                )
                 return
+
             msg = self._envelope_decoder.decode(raw)
             topic = msg.topic
-            msg.topic = msg.topic.split(".")
-            msg_type = type(msg.data)
-            data_mapper = PACKET_MAPPERS.get(msg_type)
-
-            if data_mapper is None:
-                return
-
-            formatted_data = data_mapper(msg)
-
-            if formatted_data is None:
-                return
+            if len(topic) < 2:
+                raise RuntimeError(
+                    f"{self._exchange_id}: invalid topic format (no dot): {topic}"
+                )
 
             event_id = self._stream_registry.get_event_id(topic)
 
             if event_id is None:
-                return
+                raise KeyError(f"{self._exchange_id}: {topic} not found in registry.")
 
-            for event in formatted_data:
-                event.event_id = event_id
-                self._logger.info(event.event_id)
-                await self._event_bus.publish(event_id, event)
+            msg.topic = msg.topic.split(".")[0]
+            msg_dtype = type(msg.data)
+            data_mapper = PACKET_MAPPERS.get(msg_dtype)
+
+            if data_mapper is None:
+                raise RuntimeError(
+                    f"{self._exchange_id}: data mapper for {type(msg.data)} not found."
+                )
+
+            formatted_data = data_mapper(msg)
+
+            if formatted_data is None or not isinstance(formatted_data, list):
+                raise RuntimeError(
+                    f"{self._exchange_id}: failed to format data\n{msg}\n"
+                )
+            await asyncio.gather(
+                *[self._event_bus.publish(event_id, event) for event in formatted_data],
+                return_exceptions=False,
+            )
 
         except Exception as e:
-            self._logger.exception(f"{self._exchange_id}: {e}")
-            pass
-
-        return
+            raise RuntimeError(f"{self._exchange_id}: {e}") from e

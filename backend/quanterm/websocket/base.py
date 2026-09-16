@@ -3,7 +3,8 @@ import logging
 from abc import ABC, abstractmethod
 from websockets import ClientConnection, ConnectionClosed
 import websockets
-from quanterm.bus.base import EventBus, get_event_bus
+from quanterm.bus import EVENT_BUS
+from quanterm.bus.base import EventBus
 from quanterm.exchange.constants import ExchangeID
 from quanterm.registries import STREAM_REGISTRY
 from quanterm.websocket import JSON_ENCODER
@@ -16,7 +17,7 @@ class BaseWS(ABC):
         self._uri: str
         self._websocket: ClientConnection | None = None
         self._watch_task: asyncio.Task[None] | None = None
-        self._event_bus: EventBus = get_event_bus()
+        self._event_bus: EventBus = EVENT_BUS
         self._max_streams: int
         self._encoder = JSON_ENCODER
         self._exchange_id: ExchangeID

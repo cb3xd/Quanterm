@@ -3,7 +3,7 @@ import collections
 from enum import StrEnum
 from fastapi import WebSocket
 from msgspec import Struct, json
-from quanterm.bus.base import get_event_bus
+from quanterm.bus import EVENT_BUS
 from quanterm.exchange.constants import ExchangeID
 from quanterm.exchange import manager
 from quanterm.fapi.routers import ws_router
@@ -28,7 +28,6 @@ class Unsubscribe(Struct, tag_field="method", tag=str(FapiMethods.UNSUBSCRIBE)):
 _msg_types = Subscribe | Unsubscribe
 _msg_decoder = json.Decoder(_msg_types)
 _msg_encoder = JSON_ENCODER
-_event_bus = get_event_bus()
 
 
 class ConnectionState:
@@ -65,7 +64,7 @@ async def _handle_message(message: Subscribe | Unsubscribe, state: ConnectionSta
 
     for event in message.events:
         event_id = f"{message.exchange}.{event}"
-        _event_bus.on(event_id, state.queue_packet)
+        EVENT_BUS.on(event_id, state.queue_packet)
 
 
 async def _receive_loop(websocket: WebSocket, state: ConnectionState):
@@ -85,7 +84,7 @@ async def websocket_loop(websocket: WebSocket):
             task_group.create_task(_send_loop(websocket, state))
             task_group.create_task(_receive_loop(websocket, state))
     finally:
-        _event_bus.unregister_all(state.queue_packet)
+        EVENT_BUS.unregister_all(state.queue_packet)
 
 
 @ws_router.websocket("")

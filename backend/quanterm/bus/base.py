@@ -5,6 +5,8 @@ from typing import Optional, TypeAlias, Callable, Any, Coroutine
 from collections import defaultdict
 from msgspec import Struct
 
+from quanterm.schemas import Packet
+
 
 EventHandler: TypeAlias = Callable[[Any], Coroutine[Any, Any, None]]
 
@@ -72,15 +74,20 @@ class EventBus:
         else:
             return decorator(handler)
 
-    async def publish(self, event: str, message: Struct) -> None:
+    async def publish(self, event: str, message: Packet) -> None:
         listeners = self.event_registry.get_listeners(event)
+        if message is None:
+            raise RuntimeError(f"event_bus: {event} message content is None")
         if not listeners:
             return
+        message.event_id = event
         for listener in listeners:
             try:
                 await listener(message)
-            except Exception:
-                pass
+            except Exception as e:
+                raise RuntimeError(
+                    f"event_bus: error publishing {event} ----------- \n {e} \n-----------"
+                ) from e
 
     def remove_listener(self, event: str, handler: EventHandler) -> None:
         self.event_registry.remove_listener(event, handler)
@@ -91,10 +98,3 @@ class EventBus:
     def get_listeners(self) -> dict[str, set[EventHandler]]:
         logging.getLogger("uvicorn").info("GET LISTENERS CALLED")
         return self._listeners.copy()
-
-
-_event_bus_instance = EventBus()
-
-
-def get_event_bus() -> EventBus:
-    return _event_bus_instance

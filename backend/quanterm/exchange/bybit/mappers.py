@@ -26,7 +26,7 @@ _interval_map = {
 def map_list(packets: BybitEnvelope) -> list[msgspec.Struct]:
     result: list[msgspec.Struct] = []
     for packet in packets.data:
-        mapper = PACKET_MAPPERS.get(packets.topic[0])
+        mapper = PACKET_MAPPERS.get(packets.topic)
         if mapper is None:
             break
         formatted_data = mapper(packet, packets.topic[len(packets.topic) - 1])
@@ -70,7 +70,7 @@ def map_kline(kline: BybitKlinePacket, symbol: str):
 
 
 class BybitEnvelope(msgspec.Struct):
-    topic: list[str] | str
+    topic: str
     data: list = msgspec.field(name="data")
 
 

@@ -1,6 +1,6 @@
 from msgspec import Struct, field
 from quanterm.exchange.constants import ExchangeID
-from quanterm.types import KlineIntervals, StreamTypes
+from quanterm.types import KlineIntervals
 
 
 class BinanceTradePacket(Struct, tag_field="e", tag="aggTrade", kw_only=True):
@@ -10,7 +10,6 @@ class BinanceTradePacket(Struct, tag_field="e", tag="aggTrade", kw_only=True):
     size: str = field(name="q")
     is_buy: bool = field(name="m")
     exchange_id: ExchangeID = ExchangeID.binanceusdm
-    stream_type: StreamTypes = StreamTypes.trade_stream
 
 
 class BinanceKlineData(Struct):
@@ -32,7 +31,6 @@ class BinanceKlinePacket(Struct, tag_field="e", tag="kline", kw_only=True):
     symbol: str = field(name="s")
     event_time: int = field(name="E")
     kline: BinanceKlineData = field(name="k")
-    stream_type: StreamTypes = StreamTypes.kline_stream
 
 
 class BinanceMarketData(Struct, tag_field="e", tag="markPriceUpdate"):

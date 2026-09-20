@@ -9,13 +9,13 @@ import httpx
 
 encoder = msgspec.json.Encoder()
 FAPI_URL = "http://localhost:8000"
-WS_URL = "ws://localhost:8000/ws/cex"
+WS_URL = "ws://localhost:8000/ws"
 BATCH_SIZE = 100
 
 
 def fetch_symbols() -> dict[str, list[str]]:
     """Fetch {symbol: [exchange_ids]} from the API."""
-    resp = httpx.get(f"{FAPI_URL}/api/all_exchange_symbols")
+    resp = httpx.get(f"{FAPI_URL}/api/symbols")
     resp.raise_for_status()
     return resp.json()
 

@@ -46,6 +46,9 @@ class BybitWebsocket(BaseWS):
             "op": "subscribe",
             "args": list(stream_key_map.values()),
         }
+        self._logger.info(
+            f"{self._exchange_id}: subscribed to {events.__len__()} events"
+        )
 
         await self._websocket.send(json.dumps(subscribe_message))
 

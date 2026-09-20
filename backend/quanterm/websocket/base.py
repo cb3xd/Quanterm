@@ -53,13 +53,7 @@ class BaseWS(ABC):
             self._logger.warning(f"{self._exchange_id}: connect first.")
             return
 
-        self._logger.info(
-            f"{self._exchange_id}: subscribing to {events.__len__()} events"
-        )
         await self._subscribe(events)
-        self._logger.info(
-            f"{self._exchange_id}: subscribed to {events.__len__()} events"
-        )
 
     @abstractmethod
     async def _unsubscribe(self, events: set[str]) -> None: ...
@@ -111,6 +105,11 @@ class BaseWS(ABC):
             self._websocket = None
         self._active_streams.clear()
         self._logger.info(f"{self._exchange_id}: disconnected")
+        self._logger.info(
+            f"{self._exchange_id}: reconnecting in {self._reconnect_delay}"
+        )
+        await asyncio.sleep(self._reconnect_delay)
+        await self.connect()
 
     async def _listen(self) -> None:
         if self._websocket is None:

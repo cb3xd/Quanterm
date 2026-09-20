@@ -52,6 +52,9 @@ class BinanceWebsocket(BaseWS):
             "params": list(stream_key_map.values()),
         }
         await self._websocket.send(json.dumps(subscribe_message))
+        self._logger.info(
+            f"{self._exchange_id}: subscribed to {events.__len__()} events"
+        )
 
     @override
     async def _unsubscribe(self, events: set[str]) -> None:

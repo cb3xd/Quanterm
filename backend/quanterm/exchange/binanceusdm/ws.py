@@ -75,7 +75,9 @@ class BinanceWebsocket(BaseWS):
 
             event_id = self._stream_registry.get_event_id(msg.stream)
             if event_id is None:
-                return
+                raise RuntimeError(
+                    f"{self._exchange_id}: event id for {msg.stream} is not registered."
+                )
 
             data_mapper = PACKET_MAPPERS.get(msg_type)
 
@@ -88,7 +90,5 @@ class BinanceWebsocket(BaseWS):
             formatted_data.event_id = event_id
             await self._event_bus.publish(event_id, formatted_data)
 
-        except msgspec.ValidationError:
-            pass
         except Exception as e:
-            self._logger.exception(f"{self._exchange_id}: {e}")
+            raise RuntimeError(f"{self._exchange_id}: {e}") from e

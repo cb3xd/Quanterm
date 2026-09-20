@@ -1,3 +1,5 @@
+from typing import Iterable
+
 from msgspec import Struct
 
 
@@ -8,17 +10,13 @@ class Packet(Struct, kw_only=True):
 
 
 class TradePacket(Packet, kw_only=True):
-    exchange_id: str
     symbol: str
     price: str
     size: str
-    event_time: int
     is_buy: bool
 
 
 class KlinePacket(Packet, kw_only=True):
-    exchange_id: str
-    event_time: int
     open_time: int
     close_time: int
     symbol: str
@@ -35,7 +33,6 @@ class KlinePacket(Packet, kw_only=True):
 
 
 class MarketDataPacket(Packet, kw_only=True):
-    event_time: int
     market_price: str
     average_price: str
     index_price: str
@@ -43,6 +40,11 @@ class MarketDataPacket(Packet, kw_only=True):
     next_funding_time: int
 
 
-class AggregateMarketDataPacket(Packet, kw_only=True):
+class AggregateDataPacket(Struct, kw_only=True):
     exchange_id: str
-    market_data: dict[str, MarketDataPacket]
+    event_id: str | None = None
+    data: Iterable
+
+
+class AggregateMarketDataPacket(AggregateDataPacket):
+    data: dict[str, MarketDataPacket]

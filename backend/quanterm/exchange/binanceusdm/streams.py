@@ -2,6 +2,7 @@ from enum import StrEnum
 
 
 class BinanceMarketStreams(StrEnum):
+    DEPTH = "depth"
     TRADES = "aggTrade"
     MARK_PRICE = "markPrice"
     MARK_PRICE_ALL = "!markPrice@arr"

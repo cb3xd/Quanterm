@@ -1,14 +1,12 @@
 import asyncio
 import logging
-from sched import Event
 from typing import Optional, TypeAlias, Callable, Any, Coroutine
 from collections import defaultdict
-from msgspec import Struct
 
 from quanterm.schemas import Packet
 
 
-EventHandler: TypeAlias = Callable[[Any], Coroutine[Any, Any, None]]
+EventHandler = Callable[[Any], Coroutine[Any, Any, None]]
 
 
 class Listener:

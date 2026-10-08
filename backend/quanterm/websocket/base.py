@@ -1,17 +1,20 @@
 import asyncio
 import logging
 from abc import ABC, abstractmethod
-from websockets import ClientConnection, ConnectionClosed
+
 import websockets
+from websockets import ClientConnection, ConnectionClosed
+
 from quanterm.bus import EVENT_BUS
 from quanterm.bus.base import EventBus
 from quanterm.exchange.constants import ExchangeID
-from quanterm.registries import STREAM_REGISTRY
 from quanterm.websocket import JSON_ENCODER
 
 
 class BaseWS(ABC):
     def __init__(self) -> None:
+        from quanterm.registries import STREAM_REGISTRY
+
         self._active_streams: set[str] = set()
         self._stream_registry = STREAM_REGISTRY
         self._uri: str

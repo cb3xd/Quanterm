@@ -1,15 +1,13 @@
 import asyncio
 from quanterm.exchange.base import Exchange
 from quanterm.exchange.constants import ExchangeID
-from quanterm.registries import exchange_registry
+from quanterm.registries import EXCHANGE_REGISTRY
 from quanterm.websocket.base import BaseWS
 
 
 class ExchangeManager:
     def __init__(self) -> None:
-        self._active_exchanges: dict[ExchangeID, Exchange] = (
-            exchange_registry.get_registry()
-        )
+        self._active_exchanges: dict[ExchangeID, Exchange] = EXCHANGE_REGISTRY.list()
         self._websocket_instances: dict[ExchangeID, BaseWS] = {}
 
     @property

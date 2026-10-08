@@ -1,23 +1,22 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Callable
+from collections.abc import Callable
+
+from quanterm.exchange.base import Exchange
 from quanterm.exchange.constants import ExchangeID
-
-if TYPE_CHECKING:
-    from quanterm.exchange.base import Exchange
-
-_exchange_registry: dict[ExchangeID, Exchange] = {}
+from quanterm.registries.base import Registry
 
 
-def get_registry():
-    return _exchange_registry
+class ExchangeRegistry(Registry[ExchangeID, Exchange]):
+    def __init__(self) -> None:
+        super().__init__()
 
+    def register_exchange(self, exchange_id: ExchangeID):
 
-def register_exchange(exchange_id: ExchangeID):
-    def decorator(cls: Callable[..., Exchange]) -> Callable[..., Exchange]:
-        _exchange_registry[exchange_id] = cls()
-        logging.getLogger("uvicorn").info(f"registering {exchange_id}")
-        return cls
+        def decorator(cls: Callable[..., Exchange]) -> Callable[..., Exchange]:
+            self._entries[exchange_id] = cls()
+            logging.getLogger("uvicorn").info(f"registering {exchange_id}")
+            return cls
 
-    return decorator
+        return decorator

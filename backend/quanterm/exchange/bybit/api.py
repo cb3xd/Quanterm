@@ -33,3 +33,7 @@ class BybitAPI(BaseAPI):
     @override
     async def fetch_kline(self, symbol: str, interval):
         return
+
+    @override
+    async def fetch_orderbook_snapshot(self, symbol: str):
+        return

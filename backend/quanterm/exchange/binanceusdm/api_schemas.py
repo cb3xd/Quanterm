@@ -96,3 +96,22 @@ class TickerPriceChange(msgspec.Struct, rename="camel"):
     last_price: str
     volume: str
     quote_volume: str
+
+
+Bids = list[tuple[str, str]]
+Asks = Bids
+
+
+class Orderbook(msgspec.Struct):
+    symbol: str
+    event_time: int
+    transaction_time: int
+    bids: Bids
+    asks: Asks
+
+
+class OrderbookData(msgspec.Struct, rename="camel"):
+    E: int
+    T: int
+    bids: Bids
+    asks: Asks

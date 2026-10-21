@@ -1,4 +1,5 @@
 from msgspec import Struct, field
+
 from quanterm.exchange.constants import ExchangeID
 from quanterm.types import KlineIntervals
 

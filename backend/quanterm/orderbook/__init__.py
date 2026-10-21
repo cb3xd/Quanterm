@@ -1,4 +1,6 @@
-from quanterm.orderbook.types import LocalOrderbook
+Price = str
+Quantity = str
+LocalOrderbook = dict[Price, Quantity]
 
 
 class Orderbook:

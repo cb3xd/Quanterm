@@ -1,1 +1,1 @@
-from quanterm.fapi.routes import market
+from quanterm.fapi.routes import market as market

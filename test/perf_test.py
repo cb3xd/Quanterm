@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Quanterm Performance Testing Suite
+"""Quanterm Performance Testing Suite
 Modified to use URL stream query composition for market data.
 """
 
@@ -12,7 +11,6 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 import httpx
 import msgspec
@@ -33,7 +31,7 @@ def get_uvicorn_pids() -> list[str]:
     """Get all uvicorn process IDs."""
     try:
         result = subprocess.run(
-            ["pgrep", "-f", "uvicorn"], capture_output=True, text=True, check=False
+            ["pgrep", "-f", "uvicorn"], capture_output=True, text=True, check=False,
         )
         if result.returncode == 0:
             return [pid for pid in result.stdout.strip().split("\n") if pid]
@@ -42,7 +40,7 @@ def get_uvicorn_pids() -> list[str]:
         return []
 
 
-def get_process_stats(pids: list[str]) -> Optional[dict]:
+def get_process_stats(pids: list[str]) -> dict | None:
     """Get CPU and memory stats for given process IDs."""
     if not pids:
         return None
@@ -166,7 +164,7 @@ async def reader_loop(ws, stop_event, stats):
                     sys.stdout.write("\r\033[K")
                     print(f"[STREAM] non-JSON frame: {msg[:200]}")
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             continue
         except websockets.ConnectionClosed:
             print("\nWebSocket connection closed prematurely by server.")
@@ -178,11 +176,11 @@ async def single_client_streamer(ws_url, symbol_map, stop_event, subs_done, stat
     connected = False
 
     # Compose streams parameter using the upgraded URL format logic
-    streams = [f"trade_stream.{symbol.lower()}" for symbol in symbol_map.keys()]
+    streams = [f"trade_stream.{symbol.lower()}" for symbol in symbol_map]
 
     encoder = msgspec.json.Encoder()
     params = encoder.encode(
-        {"method": "sub", "events": streams, "exchange": "binanceusdm"}
+        {"method": "sub", "events": streams, "exchange": "binanceusdm"},
     )
 
     try:
@@ -222,7 +220,7 @@ async def progress_loop(stop_event, subs_done, stats, duration, streams_count, s
 
         if not subs_done.is_set():
             sys.stdout.write(
-                f"\rConnecting and initializing streams... | Status: {status}"
+                f"\rConnecting and initializing streams... | Status: {status}",
             )
         else:
             live_elapsed = time.monotonic() - stats.get("subs_done_time", start)
@@ -231,7 +229,7 @@ async def progress_loop(stop_event, subs_done, stats, duration, streams_count, s
                 f"Status: {status} | "
                 f"Streams: {streams_count} | "
                 f"Total Msgs: {stats['messages_received']} ({rate:.0f}/s) | "
-                f"Errors: {stats['errors']}"
+                f"Errors: {stats['errors']}",
             )
         sys.stdout.flush()
 
@@ -312,10 +310,10 @@ async def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "--ws-url", default=DEFAULT_WS_URL, help="WebSocket target endpoint"
+        "--ws-url", default=DEFAULT_WS_URL, help="WebSocket target endpoint",
     )
     parser.add_argument(
-        "--http-url", default=DEFAULT_HTTP_URL, help="HTTP API to fetch symbols from"
+        "--http-url", default=DEFAULT_HTTP_URL, help="HTTP API to fetch symbols from",
     )
     parser.add_argument(
         "--duration",
@@ -329,7 +327,7 @@ async def main():
         help="Pretty-print every incoming stream message",
     )
     parser.add_argument(
-        "--silent", action="store_true", help="Suppress progress bar metrics"
+        "--silent", action="store_true", help="Suppress progress bar metrics",
     )
     parser.add_argument(
         "--monitor",
@@ -355,7 +353,7 @@ async def main():
 
     if not args.silent:
         print(
-            f"Preparing query parameter connection for {len(symbol_map)} streams, running for {args.duration}s"
+            f"Preparing query parameter connection for {len(symbol_map)} streams, running for {args.duration}s",
         )
         if args.monitor:
             print("System monitoring enabled\n")
@@ -367,18 +365,18 @@ async def main():
     await system_monitor.start()
 
     client_task = asyncio.create_task(
-        single_client_streamer(args.ws_url, symbol_map, stop_event, subs_done, stats)
+        single_client_streamer(args.ws_url, symbol_map, stop_event, subs_done, stats),
     )
     progress_task = asyncio.create_task(
         progress_loop(
-            stop_event, subs_done, stats, args.duration, len(symbol_map), args.silent
-        )
+            stop_event, subs_done, stats, args.duration, len(symbol_map), args.silent,
+        ),
     )
 
     await subs_done.wait()
     stats["subs_done_time"] = time.monotonic()
     print(
-        f"\nAll streams established via URL execution. Running for {args.duration}s..."
+        f"\nAll streams established via URL execution. Running for {args.duration}s...",
     )
     await asyncio.sleep(args.duration)
     stop_event.set()

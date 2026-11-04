@@ -1,11 +1,7 @@
-from quanterm.exchange.base import Exchange
-from quanterm.exchange.bybit.api import BybitAPI
-from quanterm.exchange.bybit.ws import BybitWebsocket
-from quanterm.exchange.constants import ExchangeID
-from quanterm.registries import EXCHANGE_REGISTRY
+"""
+bybit: handles rest api and websockets for Bybit.
+"""
 
+from .client import Bybit
 
-@EXCHANGE_REGISTRY.register_exchange(ExchangeID.bybit)
-class Bybit(Exchange):
-    def __init__(self):
-        super().__init__(ws=BybitWebsocket(), api=BybitAPI())
+__all__ = ["Bybit"]

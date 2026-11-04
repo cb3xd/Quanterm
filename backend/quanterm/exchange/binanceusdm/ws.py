@@ -1,9 +1,11 @@
-from typing import override
-import msgspec
 import json
+from typing import override
+
+import msgspec
+
+from quanterm.exchange.constants import ExchangeID
 from quanterm.exchange.binanceusdm.mappers import PACKET_MAPPERS, StreamRouterType
 from quanterm.exchange.binanceusdm.utils import format_id
-from quanterm.exchange.constants import ExchangeID
 from quanterm.websocket.base import BaseWS
 
 
@@ -53,7 +55,7 @@ class BinanceWebsocket(BaseWS):
         }
         await self._websocket.send(json.dumps(subscribe_message))
         self._logger.info(
-            f"{self._exchange_id}: subscribed to {events.__len__()} events"
+            f"{self._exchange_id}: subscribed to {events.__len__()} events",
         )
 
     @override
@@ -65,7 +67,7 @@ class BinanceWebsocket(BaseWS):
         try:
             if raw.startswith(b'{"result"'):
                 self._logger.info(
-                    f"{self._exchange_id}: ignoring subscription acknowledgement."
+                    f"{self._exchange_id}: ignoring subscription acknowledgement.",
                 )
                 return
             if raw.startswith(b'{"code"'):
@@ -79,14 +81,14 @@ class BinanceWebsocket(BaseWS):
             event_id = self._stream_registry.get_event_id(msg.stream)
             if event_id is None:
                 raise RuntimeError(
-                    f"{self._exchange_id}: event id for {msg.stream} is not registered."
+                    f"{self._exchange_id}: event id for {msg.stream} is not registered.",
                 )
 
             data_mapper = PACKET_MAPPERS.get(msg_type)
 
             if data_mapper is None:
                 raise RuntimeError(
-                    f"{self._exchange_id}: data mapper for {msg_type} not found."
+                    f"{self._exchange_id}: data mapper for {msg_type} not found.",
                 )
 
             formatted_data = data_mapper(msg.packet)

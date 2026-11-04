@@ -20,3 +20,6 @@ class ExchangeRegistry(Registry[ExchangeID, Exchange]):
             return cls
 
         return decorator
+
+
+EXCHANGE_REGISTRY = ExchangeRegistry()

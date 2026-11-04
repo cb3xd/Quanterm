@@ -1,6 +1,6 @@
 import asyncio
-from quanterm.exchange.base import Exchange
-from quanterm.exchange.constants import ExchangeID
+
+from quanterm.exchange import Exchange, ExchangeID
 from quanterm.registries import EXCHANGE_REGISTRY
 from quanterm.websocket.base import BaseWS
 
@@ -20,11 +20,7 @@ class ExchangeManager:
 
     def get_exchange(self, exchange_id: ExchangeID) -> Exchange:
         if exchange_id not in self.active_exchanges:
-            exchange_class = self._active_exchanges[exchange_id]
-            if not exchange_class:
-                raise ValueError(f"Exchange {exchange_id} was never registered!")
-
-            self._active_exchanges[exchange_id] = exchange_class
+            raise ValueError(f"Exchange {exchange_id} was never registered!")
         return self._active_exchanges[exchange_id]
 
     async def connect_all_websockets(self):
@@ -37,5 +33,8 @@ class ExchangeManager:
 
     async def close_all(self):
         await asyncio.gather(
-            *[exchange.close() for exchange in self.active_exchanges.values()]
+            *[exchange.close() for exchange in self.active_exchanges.values()],
         )
+
+
+manager = ExchangeManager()

@@ -1,11 +1,10 @@
 import asyncio
-from collections import deque
 import time
-
-import msgspec
-import websockets
+from collections import deque
 
 import httpx
+import msgspec
+import websockets
 
 encoder = msgspec.json.Encoder()
 FAPI_URL = "http://localhost:8000"
@@ -24,8 +23,7 @@ def build_subscribe_packets(
     symbols_by_exchange: dict[str, list[str]],
     batch_size: int = BATCH_SIZE,
 ) -> list[bytes]:
-    """
-    Build subscribe packets per exchange, chunked into batches.
+    """Build subscribe packets per exchange, chunked into batches.
     Binance limits ~200 params per SUBSCRIBE message, so we default to 100.
     """
     exchange_symbols: dict[str, list[str]] = {}
@@ -44,7 +42,7 @@ def build_subscribe_packets(
                     "method": "sub",
                     "events": chunk,
                     "exchange": exchange,
-                }
+                },
             )
             packets.append(packet)
     return packets
@@ -65,7 +63,7 @@ async def test():
         decoded = msgspec.json.decode(pkt)
         print(
             f"  Packet {i}: exchange={decoded['exchange']}, "
-            f"events={len(decoded['events'])}"
+            f"events={len(decoded['events'])}",
         )
 
     async with websockets.connect(
@@ -83,7 +81,7 @@ async def test():
                 msg = await ws.recv()
                 decoded = decoder.decode(msg)
                 samples.append(
-                    round((time.time() * 1000) - decoded.get("event_time"), 2)
+                    round((time.time() * 1000) - decoded.get("event_time"), 2),
                 )
                 print(
                     f" \rLatency: {round(sum(samples) / len(samples))}ms",

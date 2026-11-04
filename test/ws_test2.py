@@ -1,7 +1,7 @@
 import asyncio
-import json
-import websockets
+
 import msgspec
+import websockets
 
 encoder = msgspec.json.Encoder()
 
@@ -15,7 +15,7 @@ async def stream_data():
                 "method": "sub",
                 "events": ["kline_stream.ada-usdt.1m"],
                 "exchange": "bybit",
-            }
+            },
         )
         print(payload)
 

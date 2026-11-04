@@ -1,4 +1,5 @@
 from abc import ABC
+
 from quanterm.external_api.base import BaseAPI
 from quanterm.websocket.base import BaseWS
 

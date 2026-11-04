@@ -1,5 +1,3 @@
-from typing import Iterable
-
 from msgspec import Struct
 
 
@@ -43,7 +41,6 @@ class MarketDataPacket(Packet, kw_only=True):
 class AggregateDataPacket(Struct, kw_only=True):
     exchange_id: str
     event_id: str | None = None
-    data: Iterable
 
 
 class AggregateMarketDataPacket(AggregateDataPacket):

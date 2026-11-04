@@ -38,5 +38,4 @@ def format_id(event_id: str) -> str:
         if interval is None:
             raise ValueError(f"Unsupported interval {interval}")
         return f"{stream_type}.{interval}.{symbol}"
-    else:
-        return f"{stream_type}.{symbol}"
+    return f"{stream_type}.{symbol}"

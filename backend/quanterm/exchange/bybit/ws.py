@@ -4,13 +4,12 @@ from typing import override
 
 import msgspec
 
-
+from quanterm.exchange.constants import ExchangeID
 from quanterm.exchange.bybit.mappers import (
     PACKET_MAPPERS,
     BybitEnvelope,
 )
 from quanterm.exchange.bybit.utils import format_id
-from quanterm.exchange.constants import ExchangeID
 from quanterm.websocket.base import BaseWS
 
 
@@ -47,7 +46,7 @@ class BybitWebsocket(BaseWS):
             "args": list(stream_key_map.values()),
         }
         self._logger.info(
-            f"{self._exchange_id}: subscribed to {events.__len__()} events"
+            f"{self._exchange_id}: subscribed to {events.__len__()} events",
         )
 
         await self._websocket.send(json.dumps(subscribe_message))
@@ -63,7 +62,7 @@ class BybitWebsocket(BaseWS):
                 raise RuntimeError(f"{self._exchange_id}: subscription failed\n{raw}")
             if raw.startswith(b'{"success":'):
                 self._logger.debug(
-                    f"{self._exchange_id}: ignoring subscription acknowledgement"
+                    f"{self._exchange_id}: ignoring subscription acknowledgement",
                 )
                 return
 
@@ -71,7 +70,7 @@ class BybitWebsocket(BaseWS):
             topic = msg.topic
             if len(topic) < 2:
                 raise RuntimeError(
-                    f"{self._exchange_id}: invalid topic format (no dot): {topic}"
+                    f"{self._exchange_id}: invalid topic format (no dot): {topic}",
                 )
 
             event_id = self._stream_registry.get_event_id(topic)
@@ -85,14 +84,14 @@ class BybitWebsocket(BaseWS):
 
             if data_mapper is None:
                 raise RuntimeError(
-                    f"{self._exchange_id}: data mapper for {type(msg.data)} not found."
+                    f"{self._exchange_id}: data mapper for {type(msg.data)} not found.",
                 )
 
             formatted_data = data_mapper(msg)
 
             if formatted_data is None or not isinstance(formatted_data, list):
                 raise RuntimeError(
-                    f"{self._exchange_id}: failed to format data\n{msg}\n"
+                    f"{self._exchange_id}: failed to format data\n{msg}\n",
                 )
             await asyncio.gather(
                 *[self._event_bus.publish(event_id, event) for event in formatted_data],

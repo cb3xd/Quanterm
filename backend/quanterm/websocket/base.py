@@ -2,13 +2,11 @@ import asyncio
 import logging
 from abc import ABC, abstractmethod
 
+import msgspec
 import websockets
 from websockets import ClientConnection, ConnectionClosed
 
-from quanterm.bus import EVENT_BUS
-from quanterm.bus.base import EventBus
-from quanterm.exchange.constants import ExchangeID
-from quanterm.websocket import JSON_ENCODER
+from quanterm.bus import EVENT_BUS, EventBus
 
 
 class BaseWS(ABC):
@@ -22,8 +20,8 @@ class BaseWS(ABC):
         self._watch_task: asyncio.Task[None] | None = None
         self._event_bus: EventBus = EVENT_BUS
         self._max_streams: int
-        self._encoder = JSON_ENCODER
-        self._exchange_id: ExchangeID
+        self._encoder = msgspec.json.Encoder()
+        self._exchange_id: str
         self._max_delay: float = 60.0
         self._reconnect_delay: float = 1.0
         self._logger: logging.Logger
@@ -61,9 +59,9 @@ class BaseWS(ABC):
     @abstractmethod
     async def _unsubscribe(self, events: set[str]) -> None: ...
     async def unsubscribe(self, events: set[str]) -> None:
-        if self._active_streams == 0:
+        if self._active_streams.__len__() == 0:
             self._logger.warning(
-                f"{self._exchange_id}: no active streams to unsubscribe from."
+                f"{self._exchange_id}: no active streams to unsubscribe from.",
             )
             return
         if self._websocket is None:
@@ -81,7 +79,9 @@ class BaseWS(ABC):
         delay = self._reconnect_delay
         try:
             self._websocket = await websockets.connect(
-                self._uri, ping_interval=20, ping_timeout=10
+                self._uri,
+                ping_interval=20,
+                ping_timeout=10,
             )
             self._reconnect_delay = 1.0
             self._watch_task = asyncio.create_task(self._listen())
@@ -109,7 +109,7 @@ class BaseWS(ABC):
         self._active_streams.clear()
         self._logger.info(f"{self._exchange_id}: disconnected")
         self._logger.info(
-            f"{self._exchange_id}: reconnecting in {self._reconnect_delay}"
+            f"{self._exchange_id}: reconnecting in {self._reconnect_delay}",
         )
         await asyncio.sleep(self._reconnect_delay)
         await self.connect()

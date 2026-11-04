@@ -17,7 +17,7 @@ HEADER_SIZE = 6
 total_length = HEADER_SIZE + len(payload)
 
 message_header = struct.pack(
-    ">HHBB", START_OF_MESSAGE, total_length, MSG_TYPE_SUB, MATCHING_UNIT_CLIENT
+    ">HHBB", START_OF_MESSAGE, total_length, MSG_TYPE_SUB, MATCHING_UNIT_CLIENT,
 )
 
 final_message = message_header + payload

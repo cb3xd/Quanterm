@@ -1,5 +1,4 @@
 import logging
-from signal import raise_signal
 from typing import override
 
 import msgspec
@@ -10,10 +9,10 @@ from quanterm.exchange.binanceusdm.api_schemas import (
     Candle,
     ExchangeInfo,
     KlineData,
-    Orderbook,
     OrderbookData,
 )
 from quanterm.external_api.base import BaseAPI
+from quanterm.orderbook import LocalOrderbook
 from quanterm.types import KlineIntervals
 
 
@@ -28,7 +27,7 @@ class BinanceAPI(BaseAPI):
     async def fetch_symbols(self) -> set[str]:
         logging.getLogger("uvicorn").info("Fetching symbols")
         exchange_info = await self.fetch_exchange_info()
-        symbols = set()
+        symbols: set[str] = set()
         for symbol in exchange_info.symbols:
             symbols.add(f"{symbol.base_asset.lower()}-{symbol.quote_asset.lower()}")
         return symbols
@@ -72,7 +71,7 @@ class BinanceAPI(BaseAPI):
             raw_bytes = await r.read()
             data = self._orderbook_snapshot_decoder.decode(raw_bytes)
 
-            return Orderbook(
+            return LocalOrderbook(
                 symbol=symbol,
                 event_time=data.E,
                 transaction_time=data.T,

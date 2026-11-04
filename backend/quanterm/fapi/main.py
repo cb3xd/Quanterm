@@ -1,10 +1,12 @@
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from quanterm.exchange import manager
+from quanterm.fapi.routers import api_router, ws_router
+from quanterm.fapi.routes import market as market
 from quanterm.registries import SYMBOL_REGISTRY
-from quanterm.fapi.routers import ws_router, api_router
-from quanterm.fapi.routes import market  # noqa: F401 registers routes
 
 
 @asynccontextmanager

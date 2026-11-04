@@ -16,8 +16,8 @@ async def main():
 
     await ws2.connect()
     await ws.connect()
-    await ws2.subscribe(set(["trade_stream.btc-usdt"]))
-    await ws.subscribe(set(["kline_stream.btc-usdt.1m"]))
+    await ws2.subscribe({"trade_stream.btc-usdt"})
+    await ws.subscribe({"kline_stream.btc-usdt.1m"})
     await asyncio.sleep(3)
 
     logger.debug("Test 1 passed")

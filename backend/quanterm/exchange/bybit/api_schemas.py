@@ -1,5 +1,5 @@
-from msgspec import Struct, field
 import msgspec
+from msgspec import Struct, field
 
 
 class LeverageFilter(msgspec.Struct, rename="camel"):
@@ -106,3 +106,17 @@ class KlineData(Struct, rename="camel"):
     category: str
     symbol: str
     candles: list[Candle] = field(name="list")
+
+
+Bids = list[list[str]]
+Asks = Bids
+
+
+class OrderbookData(Struct, rename="camel"):
+    s: str
+    b: Bids
+    a: Asks
+    ts: int
+    u: int
+    seq: int
+    cts: int

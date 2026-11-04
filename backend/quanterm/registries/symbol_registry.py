@@ -23,9 +23,11 @@ class SymbolRegistry:
     async def get_all_symbols(self):
         if self._supported_symbols.list():
             return self._supported_symbols.list()
-        else:
-            symbols = await self._get_all_symbols()
-            return symbols
+        symbols = await self._get_all_symbols()
+        return symbols
 
-    def get_dash_format(self, symbol):
+    def get_dash_format(self, symbol: str):
         return self._formatted_symbols.get(symbol)
+
+
+SYMBOL_REGISTRY = SymbolRegistry()

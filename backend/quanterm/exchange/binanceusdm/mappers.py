@@ -1,21 +1,21 @@
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from msgspec import convert
 
+from quanterm.exchange.constants import ExchangeID
 from quanterm.exchange.binanceusdm.types import FuturesType
-from quanterm.registries import SYMBOL_REGISTRY
 from quanterm.exchange.binanceusdm.ws_schemas import (
     BinanceKlinePacket,
-    BinanceTradePacket,
     BinanceMarketData,
+    BinanceTradePacket,
 )
-
-from quanterm.exchange.constants import ExchangeID
+from quanterm.registries import SYMBOL_REGISTRY
 from quanterm.schemas import (
-    KlinePacket,
-    TradePacket,
-    MarketDataPacket,
     AggregateMarketDataPacket,
+    KlinePacket,
+    MarketDataPacket,
+    TradePacket,
 )
 
 
@@ -57,21 +57,17 @@ def map_kline(packet: BinanceKlinePacket) -> KlinePacket:
 def map_market_data(packets: list[BinanceMarketData]) -> AggregateMarketDataPacket:
     if type(packets) is not list:
         raise RuntimeError(
-            f"{__name__} map_market_data(): Packet of type {type(packets)} passed to data mapper is not a list."
+            f"{__name__} map_market_data(): Packet of type {type(packets)} passed to data mapper is not a list.",
         )
     market_data: dict[str, MarketDataPacket] = {}
     for pair_data in packets:
         if type(pair_data) is not BinanceMarketData:
             raise RuntimeError(
-                f"{__name__} map_market_data(): pair data for {pair_data.symbol} is not of type BinanceMarketData."
+                f"{__name__} map_market_data(): pair data for {pair_data.symbol} is not of type BinanceMarketData.",
             )
         if pair_data.market_type is not FuturesType.USDM:
             continue
         dashed_symbol = SYMBOL_REGISTRY.get_dash_format(pair_data.symbol.lower())
-        if dashed_symbol is None:
-            raise RuntimeError(
-                f"{__name__} map_market_data(): {pair_data.symbol} is not registered."
-            )
         market_data[dashed_symbol] = MarketDataPacket(
             event_time=pair_data.event_time,
             market_price=pair_data.mark_price,
@@ -97,7 +93,7 @@ def list_mapper(packets: list):
 
     if packet_mapper is None:
         raise RuntimeError(
-            f"{__name__} list_mapper(): packet_mapper does not exist for packet type {packet_type}."
+            f"{__name__} list_mapper(): packet_mapper does not exist for packet type {packet_type}.",
         )
 
     mapped_packet = packet_mapper(packets)

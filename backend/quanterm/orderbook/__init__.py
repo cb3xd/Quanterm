@@ -1,8 +1,3 @@
-Price = str
-Quantity = str
-LocalOrderbook = dict[Price, Quantity]
+from .orderbook import Asks, Bids, LocalOrderbook, Orderbook, Price, Quantity
 
-
-class Orderbook:
-    def __init__(self) -> None:
-        self.local_orderbook: LocalOrderbook = {}
+__all__ = ["Asks", "Bids", "LocalOrderbook", "Orderbook", "Price", "Quantity"]

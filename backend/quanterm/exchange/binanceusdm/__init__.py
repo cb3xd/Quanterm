@@ -1,13 +1,3 @@
-from quanterm.exchange.base import Exchange
-from quanterm.exchange.binanceusdm.api import BinanceAPI
-from quanterm.exchange.binanceusdm.ws import BinanceWebsocket
-from quanterm.exchange.constants import ExchangeID
-from quanterm.registries import EXCHANGE_REGISTRY
+from .client import BinanceUSDM
 
-
-@EXCHANGE_REGISTRY.register_exchange(ExchangeID.binanceusdm)
-class BinanceUSDM(Exchange):
-    def __init__(self) -> None:
-        ws = BinanceWebsocket()
-        api = BinanceAPI()
-        super().__init__(ws=ws, api=api)
+__all__ = ["BinanceUSDM"]

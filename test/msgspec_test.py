@@ -1,7 +1,8 @@
-from typing import Callable
+from collections.abc import Callable
 
 from msgspec import Struct, field, json
-from quanterm.exchange.constants import ExchangeID
+
+from quanterm.exchange import ExchangeID
 from quanterm.schemas import KlinePacket, TradePacket
 from quanterm.types import KlineIntervals, StreamTypes
 

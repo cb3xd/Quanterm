@@ -1,17 +1,20 @@
 import asyncio
 import logging
-from typing import Optional, TypeAlias, Callable, Any, Coroutine
 from collections import defaultdict
+from collections.abc import Callable, Coroutine
+from typing import Any
 
 from quanterm.schemas import Packet
-
 
 EventHandler = Callable[[Any], Coroutine[Any, Any, None]]
 
 
 class Listener:
     def __init__(
-        self, event_bus: "EventBus", event: str, handler: EventHandler
+        self,
+        event_bus: EventBus,
+        event: str,
+        handler: EventHandler,
     ) -> None:
         self.event_bus = event_bus
         self.event = event
@@ -58,10 +61,12 @@ class EventBus:
         self._listeners: defaultdict[str, set[EventHandler]] = defaultdict(set)
         self._handler_events: defaultdict[EventHandler, set[str]] = defaultdict(set)
         self.event_registry = EventRegistry()
-        self._background_tasks: set[asyncio.Task] = set()
+        self._background_tasks: set[asyncio.Task[None]] = set()
 
     def on(
-        self, event: str, handler: Optional[EventHandler] = None
+        self,
+        event: str,
+        handler: EventHandler | None = None,
     ) -> Callable[[EventHandler], Listener] | Listener:
         def decorator(handler_function: EventHandler) -> Listener:
             self.event_registry.register(event_id=event, handler=handler_function)
@@ -69,13 +74,10 @@ class EventBus:
 
         if handler is None:
             return decorator
-        else:
-            return decorator(handler)
+        return decorator(handler)
 
     async def publish(self, event: str, message: Packet) -> None:
         listeners = self.event_registry.get_listeners(event)
-        if message is None:
-            raise RuntimeError(f"event_bus: {event} message content is None")
         if not listeners:
             return
         message.event_id = event
@@ -84,7 +86,7 @@ class EventBus:
                 await listener(message)
             except Exception as e:
                 raise RuntimeError(
-                    f"event_bus: error publishing {event} ----------- \n {e} \n-----------"
+                    f"event_bus: error publishing {event} ----------- \n {e} \n-----------",
                 ) from e
 
     def remove_listener(self, event: str, handler: EventHandler) -> None:
@@ -96,3 +98,6 @@ class EventBus:
     def get_listeners(self) -> dict[str, set[EventHandler]]:
         logging.getLogger("uvicorn").info("GET LISTENERS CALLED")
         return self._listeners.copy()
+
+
+EVENT_BUS = EventBus()

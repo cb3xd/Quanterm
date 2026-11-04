@@ -1,9 +1,10 @@
 from msgspec import Struct, to_builtins
-from quanterm.exchange.constants import ExchangeID
-from quanterm.exchange import manager
+
+from quanterm.exchange import ExchangeID
+from quanterm.exchange.exchange_manager import manager
+from quanterm.fapi.routers import api_router
 from quanterm.fapi.utils import validate_symbol
 from quanterm.types import KlineIntervals
-from quanterm.fapi.routers import api_router
 
 
 @api_router.get("/kline/{exchange_id}")

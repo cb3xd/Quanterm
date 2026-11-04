@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
 
 import aiohttp
+import msgspec
 from msgspec import Struct
 from msgspec.json import Decoder
 
 from quanterm.types import KlineIntervals
-from quanterm.websocket import JSON_ENCODER
 
 
 class BaseAPI(ABC):
@@ -14,7 +14,7 @@ class BaseAPI(ABC):
         url: str,
     ) -> None:
         self.url: str = url
-        self._encoder = JSON_ENCODER
+        self._encoder = msgspec.json.Encoder()
         self._session: aiohttp.ClientSession | None = None
         self._kline_decoder: Decoder
         self._orderbook_snapshot_decoder: Decoder

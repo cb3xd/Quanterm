@@ -1,10 +1,6 @@
-import threading
-from typing import Any, overload
+from .base import Registry
+from .exchange_registry import EXCHANGE_REGISTRY
+from .stream_registry import STREAM_REGISTRY
+from .symbol_registry import SYMBOL_REGISTRY
 
-from quanterm.registries.exchange_registry import ExchangeRegistry
-from quanterm.registries.stream_registry import StreamRegistry
-from quanterm.registries.symbol_registry import SymbolRegistry
-
-SYMBOL_REGISTRY = SymbolRegistry()
-STREAM_REGISTRY = StreamRegistry()
-EXCHANGE_REGISTRY = ExchangeRegistry()
+__all__ = ["EXCHANGE_REGISTRY", "STREAM_REGISTRY", "SYMBOL_REGISTRY", "Registry"]

@@ -1,13 +1,14 @@
 import asyncio
 import collections
 from enum import StrEnum
+
 from fastapi import WebSocket
 from msgspec import Struct, json
-from quanterm.bus import EVENT_BUS
-from quanterm.exchange.constants import ExchangeID
-from quanterm.exchange import manager
+
+from quanterm.bus.base import EVENT_BUS
+from quanterm.exchange import ExchangeID
+from quanterm.exchange.exchange_manager import manager
 from quanterm.fapi.routers import ws_router
-from quanterm.websocket import JSON_ENCODER
 
 
 class FapiMethods(StrEnum):
@@ -27,7 +28,7 @@ class Unsubscribe(Struct, tag_field="method", tag=str(FapiMethods.UNSUBSCRIBE)):
 
 _msg_types = Subscribe | Unsubscribe
 _msg_decoder = json.Decoder(_msg_types)
-_msg_encoder = JSON_ENCODER
+_msg_encoder = json.Encoder()
 
 
 class ConnectionState:

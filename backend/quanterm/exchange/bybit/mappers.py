@@ -1,4 +1,5 @@
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import msgspec
 
@@ -6,7 +7,6 @@ from quanterm.exchange.bybit.streams import BybitMarketStreams
 from quanterm.exchange.bybit.ws_schemas import BybitKlinePacket, BybitTradePacket
 from quanterm.schemas import KlinePacket, TradePacket
 from quanterm.types import KlineIntervals
-
 
 _interval_map = {
     "D": KlineIntervals.daily,

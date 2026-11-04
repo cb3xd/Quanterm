@@ -1,7 +1,6 @@
 from quanterm.exchange.binanceusdm.streams import BinanceMarketStreams
 from quanterm.types import KlineIntervals, StreamTypes
 
-
 _stream_type_map = {
     StreamTypes.trade_stream: BinanceMarketStreams.TRADES,
     StreamTypes.kline_stream: BinanceMarketStreams.KLINE,
@@ -24,6 +23,5 @@ def format_id(event_id: str) -> str:
     if parts.__len__() == 3:
         interval = KlineIntervals(parts[2])
         return f"{symbol}@{stream_type}{interval}"
-    else:
-        event = f"{symbol}@{stream_type}"
-        return event
+    event = f"{symbol}@{stream_type}"
+    return event

@@ -1,4 +1,4 @@
-from quanterm.exchange.constants import ExchangeID
+from quanterm.exchange import ExchangeID
 from quanterm.orderbook import Orderbook
 from quanterm.registries.base import Registry
 
